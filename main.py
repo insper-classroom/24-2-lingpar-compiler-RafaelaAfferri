@@ -9,6 +9,9 @@ def calculadora(conta):
     num2 = ''
     posicao_sinal = []
     conta = conta.replace(" ", "")
+    if len(conta) <=0:
+        raise ValueError("Conta inválida")
+
     for i in range(len(conta)):
         if conta[i] == "+" or conta[i] == "-":
             posicao_sinal.append(i)
