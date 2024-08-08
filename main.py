@@ -9,7 +9,7 @@ def calculadora(conta):
     num2 = ''
     posicao_sinal = []
     conta = conta.replace(" ", "")
-    if len(conta) <=0:
+    if len(conta) <3:
         raise ValueError("Conta inválida")
 
     for i in range(len(conta)):
