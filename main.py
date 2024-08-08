@@ -1,3 +1,8 @@
+import sys
+
+conta = sys.argv[1]
+
+
 def calculadora(conta):
     res = 0
     num1 = ''
@@ -29,4 +34,4 @@ def calculadora(conta):
         
     return res
 
-print(calculadora("7 8 9   +345    -     123"))
+print(calculadora(conta))
