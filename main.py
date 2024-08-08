@@ -14,11 +14,11 @@ def calculadora(conta):
         if conta[i] == "+" or conta[i] == "-":
             posicao_sinal.append(i)
 
-    
+
     if len(posicao_sinal)<2:
         raise ValueError("Conta inválida")
-    for i in range(len(posicao_sinal)):
-        if conta[posicao_sinal[i]] +1 == conta[posicao_sinal[i+1]]:
+    for i in range(len(posicao_sinal)-1):
+        if posicao_sinal[i]+1 == posicao_sinal[i+1]:
             raise ValueError("Conta inválida")
 
     for i in range(len(posicao_sinal)):
