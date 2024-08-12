@@ -1,45 +1,137 @@
-import sys
+# AULA 1 
+# 
+# import sys
 
-conta = sys.argv[1]
-
-
-def calculadora(conta):
-    res = 0
-    num1 = ''
-    num2 = ''
-    posicao_sinal = []
-    conta = conta.replace(" ", "")
-
-    for i in range(len(conta)):
-        if conta[i] == "+" or conta[i] == "-":
-            posicao_sinal.append(i)
+# conta = sys.argv[1]
 
 
-    if len(posicao_sinal)<2:
-        raise ValueError("Conta inválida")
-    for i in range(len(posicao_sinal)-1):
-        if posicao_sinal[i]+1 == posicao_sinal[i+1]:
-            raise ValueError("Conta inválida")
 
-    for i in range(len(posicao_sinal)):
-        if res == 0:
-            num1 = conta[0:posicao_sinal[i]]
-            if len(posicao_sinal) == i+1:
-                num2 = conta[posicao_sinal[i]+1:]
-            else:
-                num2 = conta[posicao_sinal[i]+1:posicao_sinal[i+1]]
-        else:
-            num1 = res
-            if len(posicao_sinal) == i+1:
-                num2 = conta[posicao_sinal[i]+1:]
-            else:
-                num2 = conta[posicao_sinal[i]+1:posicao_sinal[i+1]]
-        if conta[posicao_sinal[i]] == "+":
-            res = int(num1) + int(num2)
-        if conta[posicao_sinal[i]] == "-":
-            res = int(num1) - int(num2)
+# def calculadora(conta):
+#     res = 0
+#     num1 = ''
+#     num2 = ''
+#     posicao_sinal = []
+#     conta = conta.replace(" ", "")
+
+#     for i in range(len(conta)):
+#         if conta[i] == "+" or conta[i] == "-":
+#             posicao_sinal.append(i)
+
+
+#     if len(posicao_sinal)<2:
+#         raise ValueError("Conta inválida")
+#     for i in range(len(posicao_sinal)-1):
+#         if posicao_sinal[i]+1 == posicao_sinal[i+1]:
+#             raise ValueError("Conta inválida")
+
+#     for i in range(len(posicao_sinal)):
+#         if res == 0:
+#             num1 = conta[0:posicao_sinal[i]]
+#             if len(posicao_sinal) == i+1:
+#                 num2 = conta[posicao_sinal[i]+1:]
+#             else:
+#                 num2 = conta[posicao_sinal[i]+1:posicao_sinal[i+1]]
+#         else:
+#             num1 = res
+#             if len(posicao_sinal) == i+1:
+#                 num2 = conta[posicao_sinal[i]+1:]
+#             else:
+#                 num2 = conta[posicao_sinal[i]+1:posicao_sinal[i+1]]
+#         if conta[posicao_sinal[i]] == "+":
+#             res = int(num1) + int(num2)
+#         if conta[posicao_sinal[i]] == "-":
+#             res = int(num1) - int(num2)
 
         
-    return res
+#     return res
 
-print(calculadora(conta))
+# print(calculadora(conta))
+
+
+# AULA 2
+
+import sys
+
+
+
+
+class Token():
+    def __init__(self, tipo, valor):
+        self.tipo = tipo
+        self.valor = valor
+    
+class Tokenizer():
+    def __init__(self, source):
+        self.source = source #codigo fonte
+        self.position = 0 #posição atual
+        self.next = None #ultimo token lido
+
+    def selectNext(self):
+        if self.position >= len(self.source):
+            return Token('EOF', None)
+        if self.source[self.position] == '+':
+            self.position += 1
+            self.next = Token('PLUS', '+')
+            return self.next
+        elif self.source[self.position] == '-':
+            self.position += 1
+            self.next = Token('MINUS', '-')
+            return self.next
+        elif self.source[self.position].isdigit():
+            start = self.position
+            while self.position < len(self.source) and self.source[self.position].isdigit():
+                self.position += 1
+            self.next = Token('INT', int(self.source[start:self.position]))
+            return self.next
+        elif self.source[self.position].isspace():
+            start = self.position
+            while self.position < len(self.source) and self.source[self.position].isspace():
+                self.position += 1
+            return self.selectNext()
+        else:
+            raise ValueError('Caracter inválido: ' + self.source[self.position])
+
+class Parser():
+    def __init__(self):
+        self.tokenizer = None
+        self.resultado = 0
+
+    def parseExpression(self):
+        
+        token = self.tokenizer.selectNext()
+        if token.tipo == 'INT':
+            self.resultado += token.valor
+            token = self.tokenizer.selectNext()
+            while token.tipo == 'PLUS' or token.tipo == 'MINUS':
+                if token.tipo == 'PLUS':
+                    token = self.tokenizer.selectNext()
+                    if token.tipo == 'INT':
+                        self.resultado += token.valor
+                    else:
+                        raise ValueError('Token inválido: ' + token.tipo)
+                elif token.tipo == 'MINUS':
+                    token = self.tokenizer.selectNext()
+                    if token.tipo == 'INT':
+                        self.resultado -= token.valor
+                    else:
+                        raise ValueError('Token inválido: ' + token.tipo)
+                token = self.tokenizer.selectNext()
+            return self.resultado
+        else:
+            raise ValueError('Token inválido: ' + token.tipo)
+
+            
+
+    def run(self, code):
+        tokenizador = Tokenizer(code)
+        self.tokenizer = tokenizador
+        return self.parseExpression()
+    
+
+code = sys.argv[1]
+
+parser = Parser()
+resultado = parser.run(code)
+
+print(resultado)
+
