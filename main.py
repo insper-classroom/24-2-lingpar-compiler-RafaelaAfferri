@@ -102,6 +102,8 @@ class Parser():
         if token.tipo == 'INT':
             self.resultado += token.valor
             token = self.tokenizer.selectNext()
+            if token.tipo == 'INT':
+                raise ValueError('Token inválido: ' + token.tipo)
             while token.tipo == 'PLUS' or token.tipo == 'MINUS':
                 if token.tipo == 'PLUS':
                     token = self.tokenizer.selectNext()
