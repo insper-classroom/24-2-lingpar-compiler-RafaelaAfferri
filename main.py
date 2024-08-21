@@ -259,7 +259,7 @@ class Parser():
                     else:
                         raise ValueError('Token inválido: ' + token.tipo)
                 token = self.tokenizer.next
-            return resultado
+            return int(resultado)
         else:
             raise ValueError('Token inválido: ' + token.tipo)
 
