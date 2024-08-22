@@ -140,6 +140,8 @@ import sys
 def limpa_coment2(text):
     i=0
     while i < (len(text)-1):
+        if text[i] == "*" and text[i+1] == "/":
+            raise ValueError("Comentário não aberto")
         if text[i] == "/" and text[i+1] == "*":
             inicio = i
             while text[i] != "*" or text[i+1] != "/":
@@ -148,35 +150,9 @@ def limpa_coment2(text):
                 i+=1
             if text[i] == "*" and text[i+1] == "/":
                 fim = i+2
-                text = text[:inicio] + text[fim:] 
-                    
-        if text[i] == "*" and text[i+1] == "/":
-            raise ValueError("Comentário não aberto")
-            
+                text = text[:inicio] + text[fim:]
+                i=0 
         i+=1
-    return text
-
-def limpa_coment(text):
-    achou = True
-    while achou:
-        achou = False
-        for i in range(len(text)-1):
-            if text[i] == "/" and text[i+1] == "*":
-                inicio = i
-                for j in range(i+2,(len(text)-1)):
-                    if text[j] == "*" and text[j+1] == "/":
-                        fim = j+2
-                        text = text[:inicio] + text[fim:] 
-                        achou = True
-                        break
-                if not achou:
-                    raise ValueError("Comentário não fechado")
-            if achou:
-                break
-            if text[i] == "*" and text[i+1] == "/":
-                raise ValueError("Comentário não aberto")
-        
-    
     return text
 
 class Token():
