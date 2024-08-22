@@ -137,6 +137,24 @@
 #AULA 3 - mult e div
 
 import sys
+def limpa_coment2(text):
+    i=0
+    while i < (len(text)-1):
+        if text[i] == "/" and text[i+1] == "*":
+            inicio = i
+            while text[i] != "*" or text[i+1] != "/":
+                if i == len(text)-1:
+                    raise ValueError("Comentário não fechado")
+                i+=1
+            if text[i] == "*" and text[i+1] == "/":
+                fim = i+2
+                text = text[:inicio] + text[fim:] 
+                    
+        if text[i] == "*" and text[i+1] == "/":
+            raise ValueError("Comentário não aberto")
+            
+        i+=1
+    return text
 
 def limpa_coment(text):
     achou = True
@@ -169,7 +187,7 @@ class Token():
 class Tokenizer():
     def __init__(self, source):
         
-        self.source = limpa_coment(source) #codigo fonte
+        self.source = limpa_coment2(source) #codigo fonte
         self.position = 0 #posição atual
         self.next = None #ultimo token lido
 
@@ -245,19 +263,9 @@ class Parser():
 
             while token.tipo == 'PLUS' or token.tipo == 'MINUS':
                 if token.tipo == 'PLUS':
-                    res = self.parseTerm()
-                    token = Token('INT', res)
-                    if token.tipo == 'INT':
-                        resultado += token.valor
-                    else:
-                        raise ValueError('Token inválido: ' + token.tipo)
+                    resultado += self.parseTerm()
                 elif token.tipo == 'MINUS':
-                    res = self.parseTerm()
-                    token = Token('INT', res)
-                    if token.tipo == 'INT':
-                        resultado -= token.valor
-                    else:
-                        raise ValueError('Token inválido: ' + token.tipo)
+                    resultado -= self.parseTerm()
                 token = self.tokenizer.next
             return int(resultado)
         else:
