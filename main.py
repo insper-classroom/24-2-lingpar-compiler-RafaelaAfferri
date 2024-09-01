@@ -286,6 +286,20 @@ def limpa_coment2(text):
         i+=1
     return text
 
+def balanceamento_parn(text):
+    pilha = []
+    for caractere in text:
+        if caractere == '(':
+            pilha.append(caractere)
+        elif caractere == ')':
+            if pilha == []:
+                return False
+            pilha.pop()
+
+    if pilha != []:
+        return False
+    return True
+
 class Token():
     def __init__(self, tipo, valor):
         self.tipo = tipo
@@ -394,6 +408,8 @@ class Parser():
     def run(self, code):
         tokenizador = Tokenizer(code)
         self.tokenizer = tokenizador
+        if not balanceamento_parn(code):
+            raise ValueError("Parenteses inválidos")
         resultado = self.parseExpression()
         token = self.tokenizer.selectNext()
         if token.tipo != 'EOF':
@@ -402,8 +418,8 @@ class Parser():
 
     
 
-code = sys.argv[1]
-# code = "1+1"
+# code = sys.argv[1]
+code = "1 1"
 
 parser = Parser()
 resultado = parser.run(code)
