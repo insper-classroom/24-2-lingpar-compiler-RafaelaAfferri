@@ -360,6 +360,8 @@ class Parser():
 
     def parseFactor(self):
         token = self.tokenizer.selectNext()
+        # if token.tipo == 'INT':
+        #     return token.valor
         if token.tipo == 'INT':
             return token.valor
         elif token.tipo == 'MINUS':
@@ -378,6 +380,8 @@ class Parser():
     def parseTerm(self):
         self.resultado = self.parseFactor()
         token = self.tokenizer.selectNext()
+        if token.tipo == "INT":
+            raise ValueError('Token inválido: ' + token.tipo)
         while token.tipo == 'MULT' or token.tipo == 'DIV':
             if token.tipo == 'MULT':
                 self.resultado *= self.parseFactor()
@@ -418,8 +422,8 @@ class Parser():
 
     
 
-# code = sys.argv[1]
-code = "1 1"
+code = sys.argv[1]
+# code = "(3+3)/2"
 
 parser = Parser()
 resultado = parser.run(code)
