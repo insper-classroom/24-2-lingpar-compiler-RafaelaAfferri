@@ -1,59 +1,3 @@
-import sys
-class Node():
-    def __init__(self, value):
-        self.value = value
-        self.children = []
-
-    def evaluate(self):
-        if self.value == '+':
-            if len(self.children)>1:
-                num1 = self.children[0].evaluate()
-                num2 = self.children[1].evaluate()
-                return int(num1 + num2)
-            else:
-                return self.children[0].evaluate()
-        elif self.value == '-':
-            if len(self.children)>1:
-                num1 = self.children[0].evaluate()
-                num2 = self.children[1].evaluate()
-                return int(num1 - num2)
-            else:
-                return -self.children[0].evaluate()
-        elif self.value == '*':
-            num1 = self.children[0].evaluate()
-            num2 = self.children[1].evaluate()
-            return int(num1 * num2)
-        elif self.value == '/':
-            num1 = self.children[0].evaluate()
-            num2 = self.children[1].evaluate()
-            return int(num1 // num2)
-        else:
-            return int(self.value)
-        
-            
-
-
-
-class UnOp(Node):
-    def __init__(self, value):
-        super().__init__(value)
-        self.children = []
-
-class BinOp(Node):
-    def __init__(self, value):
-        super().__init__(value)
-        self.children = []
-
-class IntVal(Node):
-    def __init__(self, value):
-        super().__init__(value)
-
-class NoOp(Node):
-    def __init__(self, value):
-        super().__init__(value)
-    
-
-
 # AULA 4 - parenteses e sinais
 
 import sys
@@ -104,7 +48,8 @@ class Tokenizer():
 
     def selectNext(self):
         if self.position >= len(self.source):
-            return Token('EOF', None)
+            self.next = Token('EOF', None)
+            return self.next
         if self.source[self.position] == '+':
             self.position += 1
             self.next = Token('PLUS', '+')
@@ -149,13 +94,14 @@ class Parser():
         self.resultado = 0
 
     def parseFactor(self):
-        token = self.tokenizer.selectNext()
+        token = self.tokenizer.next
+        self.tokenizer.selectNext()
         if token.tipo == 'INT':
-            return IntVal(token.valor)
-        elif token.tipo == 'MINUS' or token.tipo == 'PLUS':
-            no = UnOp(token.valor)
-            no.children.append(self.parseFactor())
-            return no
+            return token.valor
+        elif token.tipo == 'MINUS':
+            return -self.parseFactor()
+        elif token.tipo == 'PLUS':
+            return self.parseFactor()
         elif token.tipo == 'LPAREN':
             resultado = self.parseExpression()
             token = self.tokenizer.next
@@ -166,28 +112,31 @@ class Parser():
             raise ValueError('Token inválido: ' + token.tipo)
         
     def parseTerm(self):
-        node = self.parseFactor()
-        token = self.tokenizer.selectNext()
-        if token.tipo == "INT":
-            raise ValueError('Token inválido: ' + token.tipo)
+        self.resultado = self.parseFactor()
+        token = self.tokenizer.next
         while token.tipo == 'MULT' or token.tipo == 'DIV':
-            op = BinOp(token.valor)
-            op.children.append(node)
-            node = op
-            node.children.append(self.parseFactor())
+            self.tokenizer.selectNext()
+            if token.tipo == 'MULT':
+                self.resultado *= self.parseFactor()
+            elif token.tipo == 'DIV':
+                self.resultado //= self.parseFactor()
             token = self.tokenizer.selectNext()  
-        return node
+        return self.resultado
 
+        
+        
+        
     def parseExpression(self):
-        node = self.parseTerm()
+        resultado = self.parseTerm()
         token = self.tokenizer.next
         while token.tipo == 'PLUS' or token.tipo == 'MINUS':
-            op = BinOp(token.valor)
-            op.children.append(node)
-            node = op
-            node.children.append(self.parseTerm())
+            self.tokenizer.selectNext()
+            if token.tipo == 'PLUS':
+                resultado += self.parseTerm()
+            elif token.tipo == 'MINUS':
+                resultado -= self.parseTerm()
             token = self.tokenizer.next
-        return node
+        return int(resultado)
 
 
 
@@ -196,20 +145,19 @@ class Parser():
         self.tokenizer = tokenizador
         if not balanceamento_parn(code):
             raise ValueError("Parenteses inválidos")
-        node = self.parseExpression()
-        token = self.tokenizer.selectNext()
+        self.tokenizer.selectNext()
+        resultado = self.parseExpression()
+        token = self.tokenizer.next
         if token.tipo != 'EOF':
             raise ValueError('Token inválido: ' + self.tokenizer.next.tipo)
-        return node
+        return resultado
 
     
 
 # code = sys.argv[1]
-filecode = sys.argv[1]
-with open(filecode, 'r') as file:
-    code = file.read()
-# code = "3*(2+4)"
+code = "3+2"
 
 parser = Parser()
 resultado = parser.run(code)
-print(resultado.evaluate())
+
+print(resultado)
