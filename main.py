@@ -104,7 +104,8 @@ class Tokenizer():
 
     def selectNext(self):
         if self.position >= len(self.source):
-            return Token('EOF', None)
+            self.next = Token('EOF', None)
+            return self.next
         if self.source[self.position] == '+':
             self.position += 1
             self.next = Token('PLUS', '+')
@@ -149,7 +150,8 @@ class Parser():
         self.resultado = 0
 
     def parseFactor(self):
-        token = self.tokenizer.selectNext()
+        token = self.tokenizer.next
+        self.tokenizer.selectNext()
         if token.tipo == 'INT':
             return IntVal(token.valor)
         elif token.tipo == 'MINUS' or token.tipo == 'PLUS':
@@ -167,10 +169,9 @@ class Parser():
         
     def parseTerm(self):
         node = self.parseFactor()
-        token = self.tokenizer.selectNext()
-        if token.tipo == "INT":
-            raise ValueError('Token inválido: ' + token.tipo)
+        token = self.tokenizer.next
         while token.tipo == 'MULT' or token.tipo == 'DIV':
+            self.tokenizer.selectNext()
             op = BinOp(token.valor)
             op.children.append(node)
             node = op
@@ -182,6 +183,7 @@ class Parser():
         node = self.parseTerm()
         token = self.tokenizer.next
         while token.tipo == 'PLUS' or token.tipo == 'MINUS':
+            self.tokenizer.selectNext()
             op = BinOp(token.valor)
             op.children.append(node)
             node = op
@@ -196,8 +198,9 @@ class Parser():
         self.tokenizer = tokenizador
         if not balanceamento_parn(code):
             raise ValueError("Parenteses inválidos")
+        self.tokenizer.selectNext()
         node = self.parseExpression()
-        token = self.tokenizer.selectNext()
+        token = self.tokenizer.next
         if token.tipo != 'EOF':
             raise ValueError('Token inválido: ' + self.tokenizer.next.tipo)
         return node
