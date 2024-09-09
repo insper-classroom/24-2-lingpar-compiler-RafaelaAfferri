@@ -213,7 +213,7 @@ code = sys.argv[1]
 filecode = sys.argv[1]
 with open(filecode, 'r') as file:
     code = file.read()
-code = "1*(3+2)+(2-4)"
+# code = "1+1"
 
 parser = Parser()
 resultado = parser.run(code)
