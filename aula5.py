@@ -163,7 +163,6 @@ class Parser():
             token = self.tokenizer.next
             if token.tipo != 'RPAREN':
                 raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
             return resultado
         else:
             raise ValueError('Token inválido: ' + token.tipo)
@@ -177,8 +176,7 @@ class Parser():
             op.children.append(node)
             node = op
             node.children.append(self.parseFactor())
-            # token = self.tokenizer.selectNext()  
-            token = self.tokenizer.next
+            token = self.tokenizer.selectNext()  
         return node
 
     def parseExpression(self):
@@ -198,8 +196,8 @@ class Parser():
     def run(self, code):
         tokenizador = Tokenizer(code)
         self.tokenizer = tokenizador
-        # if not balanceamento_parn(code):
-        #     raise ValueError("Parenteses inválidos")
+        if not balanceamento_parn(code):
+            raise ValueError("Parenteses inválidos")
         self.tokenizer.selectNext()
         node = self.parseExpression()
         token = self.tokenizer.next
@@ -209,11 +207,11 @@ class Parser():
 
     
 
-code = sys.argv[1]
+# code = sys.argv[1]
 filecode = sys.argv[1]
 with open(filecode, 'r') as file:
     code = file.read()
-code = "1*(3+2)+(2-4)"
+# code = "3*(2+4)"
 
 parser = Parser()
 resultado = parser.run(code)
