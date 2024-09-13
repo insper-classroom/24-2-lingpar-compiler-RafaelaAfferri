@@ -257,6 +257,8 @@ class Parser():
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
             return no
+        else:
+            raise ValueError('Token inválido: ' + token.tipo)
         
 
 
@@ -323,13 +325,15 @@ class Parser():
 
     
 
-code = sys.argv[1]
-filecode = sys.argv[1]
-with open(filecode, 'r') as file:
-    code = file.read()
-# code = """
-# {
-#   printf(3);}"""
+# code = sys.argv[1]
+# filecode = sys.argv[1]
+# with open(filecode, 'r') as file:
+#     code = file.read()
+code = """
+
+{
+  3 = 2 + 1;
+}"""
 
 parser = Parser()
 
