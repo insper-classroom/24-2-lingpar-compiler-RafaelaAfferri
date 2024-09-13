@@ -174,7 +174,7 @@ class Tokenizer():
             return self.next
         elif self.source[self.position].isalpha():
             start = self.position
-            while self.position < len(self.source) and self.source[self.position].isalnum():
+            while self.position < len(self.source) and (self.source[self.position].isalnum() or self.source[self.position] == '_'):
                 self.position += 1
             if (self.source[start:self.position] == 'printf'):
                 self.next = Token('PRINTF', self.source[start:self.position])
@@ -207,7 +207,11 @@ class Parser():
             token = self.tokenizer.next
             node = MultOp("{", "BLOCK", self.table)
             while token.tipo != 'RBRACE':
-                node.children.append(self.parserCommand())
+                if token.tipo == 'EOF':
+                    raise ValueError('Token inválido: ' + token.tipo)
+                res = self.parserCommand()
+                if res != None:
+                    node.children.append(res)
                 token = self.tokenizer.next
             self.tokenizer.selectNext()
             return node
@@ -319,13 +323,13 @@ class Parser():
 
     
 
-code = sys.argv[1]
-filecode = sys.argv[1]
-with open(filecode, 'r') as file:
-    code = file.read()
-# code = """{
-
-# }"""
+# code = sys.argv[1]
+# filecode = sys.argv[1]
+# with open(filecode, 'r') as file:
+#     code = file.read()
+code = """
+{
+  printf(3);}"""
 
 parser = Parser()
 
