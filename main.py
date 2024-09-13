@@ -323,13 +323,13 @@ class Parser():
 
     
 
-# code = sys.argv[1]
-# filecode = sys.argv[1]
-# with open(filecode, 'r') as file:
-#     code = file.read()
-code = """
-{
-  printf(3);}"""
+code = sys.argv[1]
+filecode = sys.argv[1]
+with open(filecode, 'r') as file:
+    code = file.read()
+# code = """
+# {
+#   printf(3);}"""
 
 parser = Parser()
 
