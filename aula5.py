@@ -1,4 +1,7 @@
 import sys
+
+#AULA 5 - Arvore Sintática
+
 class Node():
     def __init__(self, value):
         self.value = value
@@ -51,12 +54,7 @@ class IntVal(Node):
 class NoOp(Node):
     def __init__(self, value):
         super().__init__(value)
-    
 
-
-# AULA 4 - parenteses e sinais
-
-import sys
 
 def limpa_coment2(text):
     i=0
@@ -163,6 +161,7 @@ class Parser():
             token = self.tokenizer.next
             if token.tipo != 'RPAREN':
                 raise ValueError('Token inválido: ' + token.tipo)
+            self.tokenizer.selectNext()
             return resultado
         else:
             raise ValueError('Token inválido: ' + token.tipo)
@@ -176,7 +175,7 @@ class Parser():
             op.children.append(node)
             node = op
             node.children.append(self.parseFactor())
-            token = self.tokenizer.selectNext()  
+            token = self.tokenizer.next 
         return node
 
     def parseExpression(self):
@@ -196,8 +195,8 @@ class Parser():
     def run(self, code):
         tokenizador = Tokenizer(code)
         self.tokenizer = tokenizador
-        if not balanceamento_parn(code):
-            raise ValueError("Parenteses inválidos")
+        # if not balanceamento_parn(code):
+        #     raise ValueError("Parenteses inválidos")
         self.tokenizer.selectNext()
         node = self.parseExpression()
         token = self.tokenizer.next
@@ -208,10 +207,10 @@ class Parser():
     
 
 # code = sys.argv[1]
-filecode = sys.argv[1]
-with open(filecode, 'r') as file:
-    code = file.read()
-# code = "3*(2+4)"
+# filecode = sys.argv[1]
+# with open(filecode, 'r') as file:
+#     code = file.read()
+code = "3*(2+4)"
 
 parser = Parser()
 resultado = parser.run(code)
