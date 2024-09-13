@@ -325,15 +325,15 @@ class Parser():
 
     
 
-# code = sys.argv[1]
-# filecode = sys.argv[1]
-# with open(filecode, 'r') as file:
-#     code = file.read()
-code = """
+code = sys.argv[1]
+filecode = sys.argv[1]
+with open(filecode, 'r') as file:
+    code = file.read()
+# code = """
 
-{
-  3 = 2 + 1;
-}"""
+# {
+#   3 = 2 + 1;
+# }"""
 
 parser = Parser()
 
