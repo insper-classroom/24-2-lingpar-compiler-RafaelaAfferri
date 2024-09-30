@@ -342,6 +342,9 @@ class Parser():
             if token.tipo != 'RPAREN':
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
+            token = self.tokenizer.next
+            if token.tipo == 'SEMICOLON':
+                self.tokenizer.selectNext()
             no.children.append(self.parserCommand())
             token = self.tokenizer.next
             if token.tipo == 'ELSE':
@@ -492,19 +495,18 @@ class Parser():
 
     
 if __name__ == '__main__':
-    code = sys.argv[1]
-    filecode = sys.argv[1]
-    with open(filecode, 'r') as file:
-        code = file.read()
-#     code = """
-# {
-#     a = 0;
-#     while (a < 3){
-#         a = a +1;
-#         printf(a);
-#     }
-# }
-# """
+    # code = sys.argv[1]
+    # filecode = sys.argv[1]
+    # with open(filecode, 'r') as file:
+    #     code = file.read()
+    code = """
+
+        {
+            if ((1==1))
+            printf(3);
+        }
+
+        """
 
     parser = Parser()
 
