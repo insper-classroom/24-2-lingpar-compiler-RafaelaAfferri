@@ -1,6 +1,6 @@
 import sys
 
-#AULA 6 - Variáveis, atribuições e blocos de comando
+#AULA 7 - Comparações booleanas e relacionais, if, else e while
 
 
 
@@ -26,26 +26,6 @@ class Node():
                 return int(num1 - num2)
             else:
                 return -self.children[0].evaluate()
-        elif self.value == '<':
-            num1 = self.children[0].evaluate()
-            num2 = self.children[1].evaluate()
-            return int(num1 < num2)
-        elif self.value == '>':
-            num1 = self.children[0].evaluate()
-            num2 = self.children[1].evaluate()
-            return int(num1 > num2)
-        elif self.value == '==':
-            num1 = self.children[0].evaluate()
-            num2 = self.children[1].evaluate()
-            return int(num1 == num2)
-        elif self.value == '&&':
-            num1 = self.children[0].evaluate()
-            num2 = self.children[1].evaluate()
-            return int(num1 and num2)
-        elif self.value == '||':
-            num1 = self.children[0].evaluate()
-            num2 = self.children[1].evaluate()
-            return int(num1 or num2)
         elif self.value == '*':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
@@ -54,26 +34,12 @@ class Node():
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
             return int(num1 // num2)
-        elif self.value == '!':
-            num1 = self.children[0].evaluate()
-            return int(not num1)
         elif self.type == 'PRINTF':
             print(self.children[0].evaluate())
         elif self.type == 'ASSIGN':
             var = self.children[0].value
             value = self.children[1].evaluate()
             self.symbol_table.set(var, value)
-        elif self.type == 'SCANF':
-            num1 = input()
-            return int(num1)
-        elif self.type == 'WHILE':
-            while (self.children[0].evaluate()>0):
-                self.children[1].evaluate()
-        elif self.type == 'IF':
-            if (self.children[0].evaluate()>0):
-                self.children[1].evaluate()
-            elif len(self.children) == 3:
-                self.children[2].evaluate()
         elif self.type == 'VAR':
             if self.value in self.symbol_table.table:
                 return  self.symbol_table.get(self.value)
@@ -191,10 +157,6 @@ class Tokenizer():
             self.next = Token('RPAREN', ')')
             return self.next
         elif self.source[self.position] == '=':
-            if self.source[self.position + 1] == '=':
-                self.position += 2
-                self.next = Token('EQUAL', '==')
-                return self.next
             self.position += 1
             self.next = Token('ASSIGN', '=')
             return self.next
@@ -210,44 +172,12 @@ class Tokenizer():
             self.position += 1
             self.next = Token('SEMICOLON', ';')
             return self.next
-        elif self.source[self.position] == '<':
-            self.position += 1
-            self.next = Token('LESS', '<')
-            return self.next
-        elif self.source[self.position] == '>':
-            self.position += 1
-            self.next = Token('GREATER', '>')
-            return self.next
-        elif self.source[self.position] == '!':
-            self.position += 1
-            self.next = Token('NOT', '!')
-            return self.next
-        elif self.source[self.position] == '&':
-            if self.source[self.position + 1] == '&':
-                self.position += 2
-                self.next = Token('AND', '&&')
-                return self.next
-            raise ValueError('Caracter inválido: ' + self.source[self.position])
-        elif self.source[self.position] == '|':
-            if self.source[self.position + 1] == '|':
-                self.position += 2
-                self.next = Token('OR', '||')
-                return self.next
-            raise ValueError('Caracter inválido: ' + self.source[self.position])
         elif self.source[self.position].isalpha():
             start = self.position
             while self.position < len(self.source) and (self.source[self.position].isalnum() or self.source[self.position] == '_'):
                 self.position += 1
             if (self.source[start:self.position] == 'printf'):
                 self.next = Token('PRINTF', self.source[start:self.position])
-            elif (self.source[start:self.position] == 'scanf'):
-                self.next = Token('SCANF', self.source[start:self.position])
-            elif (self.source[start:self.position] == 'if'):
-                self.next = Token('IF', self.source[start:self.position])
-            elif (self.source[start:self.position] == 'else'):
-                self.next = Token('ELSE', self.source[start:self.position])
-            elif (self.source[start:self.position] == 'while'):
-                self.next = Token('WHILE', self.source[start:self.position])
             else:
                 self.next = Token('VAR', self.source[start:self.position])
             return self.next
@@ -299,7 +229,7 @@ class Parser():
             self.tokenizer.selectNext()
             no = BinOp(token.valor, token.tipo, self.table)
             no.children.append(NoOp(var, token.tipo, self.table))
-            no.children.append(self.orExpr())
+            no.children.append(self.parseExpression())
             token = self.tokenizer.next
             if token.tipo != 'SEMICOLON':
                 raise ValueError('Token inválido: ' + token.tipo)
@@ -316,7 +246,7 @@ class Parser():
             self.tokenizer.selectNext()
             token = self.tokenizer.next
             no = UnOp("printf","PRINTF", self.table)    
-            no.children.append(self.orExpr())            
+            no.children.append(self.parseExpression())            
             # self.tokenizer.selectNext()
             token = self.tokenizer.next
             if token.tipo != 'RPAREN':
@@ -327,40 +257,6 @@ class Parser():
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
             return no
-        elif token.tipo == 'IF':
-            token = self.tokenizer.next
-            if token.tipo != 'LPAREN':
-                raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
-            token = self.tokenizer.next
-            no = UnOp("if","IF", self.table)
-            no.children.append(self.orExpr())
-            token = self.tokenizer.next
-            if token.tipo != 'RPAREN':
-                raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
-            no.children.append(self.parserCommand())
-            token = self.tokenizer.next
-            if token.tipo == 'ELSE':
-                self.tokenizer.selectNext()
-                no.children.append(self.parserCommand())
-            return no
-        elif token.tipo == 'WHILE':
-            token = self.tokenizer.next
-            if token.tipo != 'LPAREN':
-                raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
-            token = self.tokenizer.next
-            no = UnOp("while","WHILE", self.table)
-            no.children.append(self.orExpr())
-            token = self.tokenizer.next
-            if token.tipo != 'RPAREN':
-                raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
-            no.children.append(self.parserCommand())
-            token = self.tokenizer.next
-            return no         
-
         else:
             raise ValueError('Token inválido: ' + token.tipo)
         
@@ -371,25 +267,14 @@ class Parser():
         self.tokenizer.selectNext()
         if token.tipo == 'INT':
             return IntVal(token.valor, token.tipo, self.table)
-        elif token.tipo == 'MINUS' or token.tipo == 'PLUS' or token.tipo == 'NOT':
+        elif token.tipo == 'MINUS' or token.tipo == 'PLUS':
             no = UnOp(token.valor, token.tipo, self.table)
             no.children.append(self.parseFactor())
             return no
         elif token.tipo == 'VAR':
             return NoOp(token.valor, token.tipo, self.table)
-        elif token.tipo == 'SCANF':
-            token = self.tokenizer.next
-            if token.tipo != 'LPAREN':
-                raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
-            token = self.tokenizer.next
-            if token.tipo != 'RPAREN':
-                raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
-            return NoOp("scanf", "SCANF", self.table)
-
         elif token.tipo == 'LPAREN':
-            resultado = self.orExpr()
+            resultado = self.parseExpression()
             token = self.tokenizer.next
             if token.tipo != 'RPAREN':
                 raise ValueError('Token inválido: ' + token.tipo)
@@ -423,55 +308,7 @@ class Parser():
             token = self.tokenizer.next
         return node
 
-    def relExpr(self):
-        node = self.parseExpression()
-        token = self.tokenizer.next
-        while token.tipo == 'LESS' or token.tipo == 'GREATER':
-            self.tokenizer.selectNext()
-            op = BinOp(token.valor, token.tipo, self.table)
-            op.children.append(node)
-            node = op
-            node.children.append(self.parseExpression())
-            token = self.tokenizer.next
-        return node
-    
-    def eqExpr(self):
-        node = self.relExpr()
-        token = self.tokenizer.next
-        while token.tipo == 'EQUAL':
-            self.tokenizer.selectNext()
-            op = BinOp(token.valor, token.tipo, self.table)
-            op.children.append(node)
-            node = op
-            node.children.append(self.relExpr())
-            token = self.tokenizer.next
-        return node
-    
-    def andExpr(self):
-        node = self.eqExpr()
-        token = self.tokenizer.next
-        while token.tipo == 'AND':
-            self.tokenizer.selectNext()
-            op = BinOp(token.valor, token.tipo, self.table)
-            op.children.append(node)
-            node = op
-            node.children.append(self.eqExpr())
-            token = self.tokenizer.next
-        return node
-    
-    def orExpr(self):
-        node = self.andExpr()
-        token = self.tokenizer.next
-        while token.tipo == 'OR':
-            self.tokenizer.selectNext()
-            op = BinOp(token.valor, token.tipo, self.table)
-            op.children.append(node)
-            node = op
-            node.children.append(self.andExpr())
-            token = self.tokenizer.next
-        return node
-    
-    
+
 
     def run(self, code):
         tokenizador = Tokenizer(code)
@@ -487,21 +324,18 @@ class Parser():
         return node
 
     
-if __name__ == '__main__':
-    # code = sys.argv[1]
-    # filecode = sys.argv[1]
-    # with open(filecode, 'r') as file:
-    #     code = file.read()
-    code = """
 
-    {
-        x=1;
-        while(x<4)
-            x=x+1;
-        printf(x);
-    }"""
+code = sys.argv[1]
+filecode = sys.argv[1]
+with open(filecode, 'r') as file:
+    code = file.read()
+# code = """
 
-    parser = Parser()
+# {
+#   3 = 2 + 1;
+# }"""
 
-    resultado = parser.run(code)
-    resultado.evaluate()
+parser = Parser()
+
+resultado = parser.run(code)
+resultado.evaluate()
