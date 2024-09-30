@@ -290,8 +290,8 @@ class Parser():
 
     def parserCommand(self):
         token = self.tokenizer.next
-        self.tokenizer.selectNext()
         if token.tipo == 'VAR':
+            self.tokenizer.selectNext()
             var = token.valor
             token = self.tokenizer.next
             if token.tipo != 'ASSIGN':
@@ -308,8 +308,10 @@ class Parser():
         elif token.tipo == 'LBRACE':
             return self.parserBlock()
         elif token.tipo == 'SEMICOLON':
+            self.tokenizer.selectNext()
             return
         elif token.tipo == 'PRINTF':
+            self.tokenizer.selectNext()
             token = self.tokenizer.next
             if token.tipo != 'LPAREN':
                 raise ValueError('Token inválido: ' + token.tipo)
@@ -328,6 +330,7 @@ class Parser():
             self.tokenizer.selectNext()
             return no
         elif token.tipo == 'IF':
+            self.tokenizer.selectNext()
             token = self.tokenizer.next
             if token.tipo != 'LPAREN':
                 raise ValueError('Token inválido: ' + token.tipo)
@@ -346,6 +349,7 @@ class Parser():
                 no.children.append(self.parserCommand())
             return no
         elif token.tipo == 'WHILE':
+            self.tokenizer.selectNext()
             token = self.tokenizer.next
             if token.tipo != 'LPAREN':
                 raise ValueError('Token inválido: ' + token.tipo)
@@ -492,14 +496,15 @@ if __name__ == '__main__':
     filecode = sys.argv[1]
     with open(filecode, 'r') as file:
         code = file.read()
-    # code = """
-
-    # {
-    #     x=1;
-    #     while(x<4)
-    #         x=x+1;
-    #     printf(x);
-    # }"""
+#     code = """
+# {
+#     a = 0;
+#     while (a < 3){
+#         a = a +1;
+#         printf(a);
+#     }
+# }
+# """
 
     parser = Parser()
 
