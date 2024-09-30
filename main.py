@@ -495,18 +495,18 @@ class Parser():
 
     
 if __name__ == '__main__':
-    # code = sys.argv[1]
-    # filecode = sys.argv[1]
-    # with open(filecode, 'r') as file:
-    #     code = file.read()
-    code = """
+    code = sys.argv[1]
+    filecode = sys.argv[1]
+    with open(filecode, 'r') as file:
+        code = file.read()
+    # code = """
 
-        {
-            if ((1==1))
-            printf(3);
-        }
+    #     {
+    #         if ((1==1))
+    #         printf(3);
+    #     }
 
-        """
+    #     """
 
     parser = Parser()
 
