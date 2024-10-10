@@ -26,8 +26,8 @@ class UnOp(Node):
             filho = self.children[0].evaluate()
             if filho[1] != 'int':
                 raise ValueError('Tipo inválido: ' + filho[1])
-            filho[0] = -filho[0]
-            return filho
+
+            return (-filho[0], filho[1])
 
 class BinOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -62,6 +62,8 @@ class BinOp(Node):
             if num1[1] != 'int' or num2[1] != 'int':
                 raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
             return (int(num1[0] // num2[0]), 'int')
+ 
+ 
 
 class IntVal(Node):
     def __init__(self, value, type, symbol_table):
@@ -126,7 +128,7 @@ class BinBool(Node):
             num2 = self.children[1].evaluate()
             if num1[1] != num2[1]:
                 raise ValueError('Tipo diferentes: ' + num1[1] + ' ' + num2[1])
-            return (int(num1 == num2), num1[0])
+            return (int(num1[0] == num2[0]), num1[1])
         elif self.value == '&&':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
@@ -139,6 +141,17 @@ class BinBool(Node):
             if num1[1] != 'int' or num2[1] != 'int':
                 raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
             return (int(num1[0] or num2[0])  , 'int')
+        
+
+class BinStr(Node):
+    def __init__(self, value, type, symbol_table):
+        super().__init__(value, type, symbol_table)
+
+    def evaluate(self):
+        if self.value == '.':
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            return (str(num1[0]) + str(num2[0]), 'str')
         
 class PrintOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -165,7 +178,7 @@ class IfOp(Node):
         if self.type == 'IF':
             if (self.children[0].evaluate()[0]>0):
                 self.children[1].evaluate()
-            elif len(self.children[0]) == 3:
+            elif len(self.children) == 3:
                 self.children[2].evaluate()
 
 class WhileOp(Node):
@@ -203,6 +216,7 @@ class type(Node):
         if self.type == 'TYPE':
             name = self.children[0].value
             self.symbol_table.create(name, self.value)
+
 
 class indentifier():
     def __init__(self, type, value):
@@ -281,6 +295,10 @@ class Tokenizer():
             self.position += 1
             self.next = Token('DIV', '/')
             return self.next
+        elif self.source[self.position] == '.':
+            self.position += 1
+            self.next = Token('CONCAT', '.')
+            return self.next
         elif self.source[self.position] == '(':
             self.position += 1
             self.next = Token('LPAREN', '(')
@@ -337,8 +355,9 @@ class Tokenizer():
         elif self.source[self.position] == '"':
             self.position += 1
             start = self.position
-            while self.position < len(self.source) and (self.source[self.position].isalnum() or self.source[self.position] == '_'):
+            while self.position < len(self.source) and self.source[self.position] != '"':
                 self.position += 1
+            teste = self.source[self.position]
             if self.source[self.position] != '"':
                 raise ValueError('Caracter inválido: ' + self.source[self.position])
             self.next = Token('STR', self.source[start:self.position])
@@ -545,6 +564,18 @@ class Parser():
             node.children.append(self.parseFactor())
             token = self.tokenizer.next
         return node
+    
+    def parserConcat(self):
+        node = self.parseExpression()
+        token = self.tokenizer.next
+        while token.tipo == 'CONCAT':
+            self.tokenizer.selectNext()
+            op = BinStr(token.valor, token.tipo, self.table)
+            op.children.append(node)
+            node = op
+            node.children.append(self.parseTerm())
+            token = self.tokenizer.next
+        return node
 
     def parseExpression(self):
         node = self.parseTerm()
@@ -559,7 +590,7 @@ class Parser():
         return node
 
     def relExpr(self):
-        node = self.parseExpression()
+        node = self.parserConcat()
         token = self.tokenizer.next
         while token.tipo == 'LESS' or token.tipo == 'GREATER':
             self.tokenizer.selectNext()
@@ -625,13 +656,32 @@ if __name__ == '__main__':
     filecode = sys.argv[1]
     with open(filecode, 'r') as file:
        code = file.read()
-    # code = """
-    # {   
-    #     str a;
-    #     a = "b";
-    #     printf(a);
-    # }
-    #     """
+#     code = """
+        
+ 
+#   {
+#     /* v2.2 testing */
+#     int x_1;
+    
+#     x_1 = scanf();
+#     if ((x_1 > 1) && !(x_1 < 1)) {
+#         x_1 = 3;
+#     }
+#     else {
+#         {
+#         x_1 = (-20+30)*4*3/40;;;;; /* teste de comentario */
+#         }
+#     }
+#     printf(x_1);
+#     x_1 = scanf();
+#     if ((x_1 > 1) && !(x_1 < 1))
+#         x_1 = 3;
+#     else
+#         x_1 = (-20+30)*12/40;;;;;
+
+#     printf(x_1);
+#     while ((x_1 > 1) || (x_1 == 1)) {x_1 = x_1 - 1;printf(x_1);}}
+#         """
 
     parser = Parser()
 
