@@ -1,6 +1,6 @@
 import sys
 
-#AULA 7 - Comparações booleanas e relacionais, if, else e while
+#AULA 6 - Variavel e printf
 
 
 

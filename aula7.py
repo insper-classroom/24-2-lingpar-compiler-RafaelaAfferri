@@ -18,16 +18,9 @@ class UnOp(Node):
 
     def evaluate(self):
         if self.value == '+':
-            filho = self.children[0].evaluate()
-            if filho[1] != 'int':
-                raise ValueError('Tipo inválido: ' + filho[1])
-            return filho
+            return self.children[0].evaluate()
         elif self.value == '-':
-            filho = self.children[0].evaluate()
-            if filho[1] != 'int':
-                raise ValueError('Tipo inválido: ' + filho[1])
-            filho[0] = -filho[0]
-            return filho
+            return -self.children[0].evaluate()
 
 class BinOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -38,44 +31,28 @@ class BinOp(Node):
         if self.value == '+':
                 num1 = self.children[0].evaluate()
                 num2 = self.children[1].evaluate()
-                if num1[1] != 'int' or num2[1] != 'int':
-                    raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-                
-                return (int(num1[0] + num2[0]), 'int')
+                return int(num1 + num2)
             
         elif self.value == '-':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] - num2[0]), 'int')
+            return int(num1 - num2)
         
         elif self.value == '*':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] * num2[0]), 'int')
+            return int(num1 * num2)
         elif self.value == '/':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] // num2[0]), 'int')
+            return int(num1 // num2)
 
 class IntVal(Node):
     def __init__(self, value, type, symbol_table):
         super().__init__(value, type, symbol_table)
     
     def evaluate(self):
-        return (int(self.value), 'int')
-    
-class strVal(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
-    
-    def evaluate(self):
-        return (self.value, 'str')
+        return int(self.value)
 
 class NoOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -100,9 +77,7 @@ class  UnBool(Node):
     def evaluate(self):
         if self.value == '!':
                 num1 = self.children[0].evaluate()
-                if num1[1] != 'int':
-                    raise ValueError('Tipo inválido: ' + num1[1])
-                return (int(not num1[0]), 'int')
+                return int(not num1)
 
 class BinBool(Node):
     def __init__(self, value, type, symbol_table):
@@ -112,33 +87,23 @@ class BinBool(Node):
         if self.value == '<':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] < num2[0])  , 'int')
+            return int(num1 < num2)
         elif self.value == '>':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] > num2[0])  , 'int')
+            return int(num1 > num2)
         elif self.value == '==':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
-            if num1[1] != num2[1]:
-                raise ValueError('Tipo diferentes: ' + num1[1] + ' ' + num2[1])
-            return (int(num1 == num2), num1[0])
+            return int(num1 == num2)
         elif self.value == '&&':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] and num2[0])  , 'int')
+            return int(num1 and num2)
         elif self.value == '||':
             num1 = self.children[0].evaluate()
             num2 = self.children[1].evaluate()
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] or num2[0])  , 'int')
+            return int(num1 or num2)
         
 class PrintOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -146,7 +111,7 @@ class PrintOp(Node):
 
     def evaluate(self):
         if self.type == 'PRINTF':
-            print(self.children[0].evaluate()[0])
+            print(self.children[0].evaluate())
 
 class ScanfOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -155,7 +120,7 @@ class ScanfOp(Node):
     def evaluate(self):
         if self.type == 'SCANF':
             num1 = input()
-            return (int(num1), 'int')
+            return int(num1)
 
 class IfOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -163,9 +128,9 @@ class IfOp(Node):
 
     def evaluate(self):
         if self.type == 'IF':
-            if (self.children[0].evaluate()[0]>0):
+            if (self.children[0].evaluate()>0):
                 self.children[1].evaluate()
-            elif len(self.children[0]) == 3:
+            elif len(self.children) == 3:
                 self.children[2].evaluate()
 
 class WhileOp(Node):
@@ -174,7 +139,7 @@ class WhileOp(Node):
 
     def evaluate(self):
         if self.type == 'WHILE':
-            while (self.children[0].evaluate()[0]>0):
+            while (self.children[0].evaluate()>0):
                 self.children[1].evaluate()
 
 class AssingOP(Node):
@@ -185,7 +150,7 @@ class AssingOP(Node):
         if self.type == 'ASSIGN':
             var = self.children[0].value
             value = self.children[1].evaluate()
-            self.symbol_table.set(var, value[0], value[1])
+            self.symbol_table.set(var, value)
 
 class Var(Node):
     def __init__(self, value, type, symbol_table):
@@ -193,43 +158,20 @@ class Var(Node):
 
     def evaluate(self):
         if self.type == 'VAR':
-            return (self.symbol_table.get(self.value).value, self.symbol_table.get(self.value).type)
-
-class type(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
- 
-    def evaluate(self):
-        if self.type == 'TYPE':
-            name = self.children[0].value
-            self.symbol_table.create(name, self.value)
-
-class indentifier():
-    def __init__(self, type, value):
-        self.type = type
-        self.value = value
+            if self.value in self.symbol_table.table:
+                return  self.symbol_table.get(self.value)
+            else:
+                raise ValueError('Variável não declarada: ' + self.value)
 
 class SymbolTable():
     def __init__(self):
         self.table = {}
 
     def get (self, key):
-        if key not in self.table:
-            raise ValueError('Variável não declarada: ' + key)
-        if self.table[key].value == None:
-            raise ValueError('Variável não inicializada: ' + key)
         return self.table[key]
-    def create(self, key, type):
-        if key in self.table:
-            raise ValueError('Variável já declarada: ' + key)
-        self.table[key]= indentifier(type, None)
-
-    def set (self, key, value,type):
-        if key not in self.table:
-            raise ValueError('Variável não declarada: ' + key)
-        if self.table[key].type != type:
-            raise ValueError('Tipo inválido: ' + self.table[key].type)
-        self.table[key]= indentifier(type, value)
+    
+    def set (self, key, value):
+        self.table[key] = value
     
 def limpa_coment2(text):
     i=0
@@ -248,6 +190,20 @@ def limpa_coment2(text):
                 i=0 
         i+=1
     return text
+
+def balanceamento_parn(text):
+    pilha = []
+    for caractere in text:
+        if caractere == '(':
+            pilha.append(caractere)
+        elif caractere == ')':
+            if pilha == []:
+                return False
+            pilha.pop()
+
+    if pilha != []:
+        return False
+    return True
 
 class Token():
     def __init__(self, tipo, valor):
@@ -333,18 +289,6 @@ class Tokenizer():
                 self.next = Token('OR', '||')
                 return self.next
             raise ValueError('Caracter inválido: ' + self.source[self.position])
-    
-        elif self.source[self.position] == '"':
-            self.position += 1
-            start = self.position
-            while self.position < len(self.source) and (self.source[self.position].isalnum() or self.source[self.position] == '_'):
-                self.position += 1
-            if self.source[self.position] != '"':
-                raise ValueError('Caracter inválido: ' + self.source[self.position])
-            self.next = Token('STR', self.source[start:self.position])
-            self.position += 1
-            return self.next
-
         elif self.source[self.position].isalpha():
             start = self.position
             while self.position < len(self.source) and (self.source[self.position].isalnum() or self.source[self.position] == '_'):
@@ -359,10 +303,6 @@ class Tokenizer():
                 self.next = Token('ELSE', self.source[start:self.position])
             elif (self.source[start:self.position] == 'while'):
                 self.next = Token('WHILE', self.source[start:self.position])
-            elif (self.source[start:self.position] == 'int'):
-                self.next = Token('TYPE', self.source[start:self.position])
-            elif (self.source[start:self.position] == 'str'):
-                self.next = Token('TYPE', self.source[start:self.position])
             else:
                 self.next = Token('VAR', self.source[start:self.position])
             return self.next
@@ -419,18 +359,6 @@ class Parser():
             if token.tipo != 'SEMICOLON':
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
-            return no
-        if token.tipo == 'TYPE':
-            self.tokenizer.selectNext()
-            no = type(token.valor, token.tipo, self.table)
-            token = self.tokenizer.next
-            if token.tipo != 'VAR':
-                raise ValueError('Token inválido: ' + token.tipo)
-            no.children.append(Var(token.valor, token.tipo, self.table))
-            self.tokenizer.selectNext()
-            token = self.tokenizer.next
-            if token.tipo != 'SEMICOLON':
-                raise ValueError('Token inválido: ' + token.tipo)
             return no
         elif token.tipo == 'LBRACE':
             return self.parserBlock()
@@ -522,8 +450,7 @@ class Parser():
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
             return ScanfOp("scanf", "SCANF", self.table)
-        elif token.tipo == 'STR':
-            return strVal(token.valor, token.tipo, self.table)
+
         elif token.tipo == 'LPAREN':
             resultado = self.orExpr()
             token = self.tokenizer.next
@@ -626,12 +553,13 @@ if __name__ == '__main__':
     with open(filecode, 'r') as file:
        code = file.read()
     # code = """
-    # {   
-    #     str a;
-    #     a = "b";
-    #     printf(a);
-    # }
-    #     """
+
+        #  {
+        #     if ((1==1));
+        #      printf(3);
+        #  }
+
+        #  """
 
     parser = Parser()
 
