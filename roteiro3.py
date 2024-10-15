@@ -1,4 +1,4 @@
-# AULA 4 - parenteses e sinais
+# ROTEIRO 3 - parenteses e sinais
 
 import sys
 

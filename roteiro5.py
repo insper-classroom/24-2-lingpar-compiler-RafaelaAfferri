@@ -1,6 +1,6 @@
 import sys
 
-#AULA 6 - Variavel e printf
+#ROTEIRO 5 - Variavel e printf
 
 
 

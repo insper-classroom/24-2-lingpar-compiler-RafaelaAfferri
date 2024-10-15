@@ -1,6 +1,6 @@
 import sys
 
-#AULA 5 - Arvore Sintática
+#ROTEIRO 4 - Arvore Sintática
 
 class Node():
     def __init__(self, value):

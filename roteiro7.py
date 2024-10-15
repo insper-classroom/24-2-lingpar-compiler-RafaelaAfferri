@@ -1,19 +1,15 @@
 import sys
 
-#ROTEIRO 8 - código em assembly
+#ROTEIRO 7 - string e tipagem
 
-from textwrap import dedent
 
 
 class Node():
-    id = 0
     def __init__(self, value, type, symbol_table):
         self.value = value
         self.type = type
         self.children = []
         self.symbol_table = symbol_table
-        self.id = Node.id
-        Node.id += 1  
  
 class UnOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -22,25 +18,17 @@ class UnOp(Node):
 
     def evaluate(self):
         if self.value == '+':
-            self.children[0].evaluate()
-            codigo = f"""
-            MOV EAX, $1\n
-            IMUL EBX\n
-            MOV EBX, EAX\n
-            """
-
-            Assmebly.write(codigo)
-            
-            
+            filho = self.children[0].evaluate()
+            if filho[1] != 'int':
+                raise ValueError('Tipo inválido: ' + filho[1])
+            return filho
         elif self.value == '-':
-            self.children[0].evaluate()
-            codigo = f"""
-            MOV EAX, $-1\n
-            IMUL EBX\n
-            MOV EBX, EAX\n
-            """
-            Assmebly.write(codigo)
-           
+            filho = self.children[0].evaluate()
+            if filho[1] != 'int':
+                raise ValueError('Tipo inválido: ' + filho[1])
+
+            return (-filho[0], filho[1])
+
 class BinOp(Node):
     def __init__(self, value, type, symbol_table):
         super().__init__(value, type, symbol_table)
@@ -48,77 +36,40 @@ class BinOp(Node):
 
     def evaluate(self):
         if self.value == '+':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            ADD EBX, EAX\n
-            """
-            Assmebly.write(codigo)
+                num1 = self.children[0].evaluate()
+                num2 = self.children[1].evaluate()
+                if num1[1] != 'int' or num2[1] != 'int':
+                    raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+                
+                return (int(num1[0] + num2[0]), 'int')
             
         elif self.value == '-':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-            
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            SUB EAX, EBX\n
-            MOV EBX, EAX\n
-            """
-            Assmebly.write(codigo)
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] - num2[0]), 'int')
         
         elif self.value == '*':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-            
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            IMUL EAX, EBX\n
-            MOV EBX, EAX\n
-            """
-            Assmebly.write(codigo)
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] * num2[0]), 'int')
         elif self.value == '/':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-            
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            DIV EBX\n
-            MOV EBX, EAX\n
-            """
-            Assmebly.write(codigo)
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] // num2[0]), 'int')
  
+ 
+
 class IntVal(Node):
     def __init__(self, value, type, symbol_table):
         super().__init__(value, type, symbol_table)
     
     def evaluate(self):
-        codigo = f"""
-        MOV EBX, {int(self.value)}\n
-        """
-        Assmebly.write(codigo)
-
         return (int(self.value), 'int')
     
 class strVal(Node):
@@ -144,94 +95,54 @@ class Block(Node):
             for child in self.children:
                 child.evaluate()
 
-class UnBool(Node):
+class  UnBool(Node):
     def __init__(self, value, type, symbol_table):
         super().__init__(value, type, symbol_table)
 
     def evaluate(self):
         if self.value == '!':
-                self.children[0].evaluate()
-                codigo = f"""
-                NOT EBX\n
-                """
-                
+                num1 = self.children[0].evaluate()
+                if num1[1] != 'int':
+                    raise ValueError('Tipo inválido: ' + num1[1])
+                return (int(not num1[0]), 'int')
+
 class BinBool(Node):
     def __init__(self, value, type, symbol_table):
         super().__init__(value, type, symbol_table)
 
     def evaluate(self): 
         if self.value == '<':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            CMP EAX, EBX\n
-            CALL binop_jl\n
-            """
-            Assmebly.write(codigo)
-            
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] < num2[0])  , 'int')
         elif self.value == '>':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            CMP EAX, EBX\n
-            CALL binop_jg\n
-            """
-            Assmebly.write(codigo)
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] > num2[0])  , 'int')
         elif self.value == '==':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            CMP EAX, EBX\n
-            CALL binop_je\n
-            """
-            Assmebly.write(codigo)
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            if num1[1] != num2[1]:
+                raise ValueError('Tipo diferentes: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] == num2[0]), num1[1])
         elif self.value == '&&':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            AND EAX, EBX\n
-            MOV EBX, EAX\n
-            """
-            Assmebly.write(codigo)
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] and num2[0])  , 'int')
         elif self.value == '||':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assmebly.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            OR EAX, EBX\n
-            MOV EBX, EAX\n
-            """
-            Assmebly.write(codigo)
+            num1 = self.children[0].evaluate()
+            num2 = self.children[1].evaluate()
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] or num2[0])  , 'int')
         
+
 class BinStr(Node):
     def __init__(self, value, type, symbol_table):
         super().__init__(value, type, symbol_table)
@@ -248,13 +159,7 @@ class PrintOp(Node):
 
     def evaluate(self):
         if self.type == 'PRINTF':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            CALL print_int\n
-            POP EBX\n
-            """
-            Assmebly.write(codigo)
+            print(self.children[0].evaluate()[0])
 
 class ScanfOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -271,28 +176,10 @@ class IfOp(Node):
 
     def evaluate(self):
         if self.type == 'IF':
-            self.children[0].evaluate()
-            codigo = f"""
-            CMP EBX, True\n
-            JE IF_{self.id}_True\n
-            JNE IF_{self.id}_False\n
-            """
-            Assmebly.write(codigo)
-
-            codigo = f"""
-            IF_{self.id}_True:
-            """
-            Assmebly.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            JMP IF_{self.id}_End\n
-            IF_{self.id}_False:
-            """
-            self.children[2].evaluate()
-            codigo = f"""
-            IF_{self.id}_End:
-            """
+            if (self.children[0].evaluate()[0]>0):
+                self.children[1].evaluate()
+            elif len(self.children) == 3:
+                self.children[2].evaluate()
 
 class WhileOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -300,25 +187,8 @@ class WhileOp(Node):
 
     def evaluate(self):
         if self.type == 'WHILE':
-            codigo = f"""
-            WHILE_{self.id}_Start:
-            """
-            Assmebly.write(codigo)
-
-            self.children[0].evaluate()
-
-            codigo = f"""
-            CMP EBX, False\n
-            JE WHILE_{self.id}_End\n
-            """
-            Assmebly.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            JMP WHILE_{self.id}_Start\n	
-            WHILE_{self.id}_End:
-            """
-            Assmebly.write(codigo)
+            while (self.children[0].evaluate()[0]>0):
+                self.children[1].evaluate()
 
 class AssingOP(Node):
     def __init__(self, value, type, symbol_table):
@@ -326,16 +196,9 @@ class AssingOP(Node):
 
     def evaluate(self):
         if self.type == 'ASSIGN':
-
             var = self.children[0].value
             value = self.children[1].evaluate()
-            delta = self.children[0].symbol_table.get_delta(var)
-
-            codigo = f"""
-            MOV [EBP - {delta}], EBX\n
-            """
-            Assmebly.write(codigo)
-            self.symbol_table.set(var, value[0], value[1], delta)
+            self.symbol_table.set(var, value[0], value[1])
 
 class Var(Node):
     def __init__(self, value, type, symbol_table):
@@ -343,12 +206,7 @@ class Var(Node):
 
     def evaluate(self):
         if self.type == 'VAR':
-            valor = self.symbol_table.get(self.value).value
-            codigo = f"""
-            MOV EBX, {valor}\n
-            """
-            Assmebly.write(codigo)
-            return (valor, self.symbol_table.get(self.value).type, self.symbol_table.get(self.value).delta)
+            return (self.symbol_table.get(self.value).value, self.symbol_table.get(self.value).type)
 
 class type(Node):
     def __init__(self, value, type, symbol_table):
@@ -358,16 +216,12 @@ class type(Node):
         if self.type == 'TYPE':
             name = self.children[0].value
             self.symbol_table.create(name, self.value)
-            codigo = f"""
-            PUSH DWORD 0\n
-            """
-            Assmebly.write(codigo)
+
 
 class indentifier():
-    def __init__(self, type, value, delta):
+    def __init__(self, type, value):
         self.type = type
         self.value = value
-        self.delta = delta
 
 class SymbolTable():
     def __init__(self):
@@ -379,37 +233,18 @@ class SymbolTable():
         if self.table[key].value == None:
             raise ValueError('Variável não inicializada: ' + key)
         return self.table[key]
-    def get_delta (self, key):
-        if key not in self.table:
-            raise ValueError('Variável não declarada: ' + key)
-        return self.table[key].delta
     def create(self, key, type):
         if key in self.table:
             raise ValueError('Variável já declarada: ' + key)
-        delta = (len(self.table)+1) * 4
-        self.table[key]= indentifier(type, None, delta)
+        self.table[key]= indentifier(type, None)
 
-    def set (self, key, value,type, delta):
+    def set (self, key, value,type):
         if key not in self.table:
             raise ValueError('Variável não declarada: ' + key)
         if self.table[key].type != type:
             raise ValueError('Tipo inválido: ' + self.table[key].type)
-        self.table[key]= indentifier(type, value, delta)
+        self.table[key]= indentifier(type, value)
     
-class Assmebly():
-    def __init__(self, cabecario, rodape):
-        self.cabecario = cabecario
-        self.rodape = rodape
-
-    def w_rodape(self):
-        print(self.rodape)
-    
-    def w_cabecario(self):
-        print(self.cabecario)
-
-    def write(code):
-        print(dedent(code))    
-
 def limpa_coment2(text):
     i=0
     while i < (len(text)-1):
@@ -817,27 +652,38 @@ class Parser():
 
     
 if __name__ == '__main__':
-    # code = sys.argv[1]
-    # filecode = sys.argv[1]
-    # with open(filecode, 'r') as file:
-    #    code = file.read()
-    code = """
+    code = sys.argv[1]
+    filecode = sys.argv[1]
+    with open(filecode, 'r') as file:
+       code = file.read()
+#     code = """
         
  
-  {
-    int a;
-    a = 5;
-    printf(a +3);
+#   {
+#     /* v2.2 testing */
+#     int x_1;
     
-}
-        """
+#     x_1 = scanf();
+#     if ((x_1 > 1) && !(x_1 < 1)) {
+#         x_1 = 3;
+#     }
+#     else {
+#         {
+#         x_1 = (-20+30)*4*3/40;;;;; /* teste de comentario */
+#         }
+#     }
+#     printf(x_1);
+#     x_1 = scanf();
+#     if ((x_1 > 1) && !(x_1 < 1))
+#         x_1 = 3;
+#     else
+#         x_1 = (-20+30)*12/40;;;;;
+
+#     printf(x_1);
+#     while ((x_1 > 1) || (x_1 == 1)) {x_1 = x_1 - 1;printf(x_1);}}
+#         """
 
     parser = Parser()
 
     resultado = parser.run(code)
-    rodape = """
-
-    """
-    # Assmebly.w_cabecario()
     resultado.evaluate()
-    # Assmebly.w_rodape()

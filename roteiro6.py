@@ -1,6 +1,6 @@
 import sys
 
-#AULA 7 - Operaçõe booleanas, realcionais, if, while, scanf
+#ROTEIRO 6 - Operaçõe booleanas, realcionais, if, while, scanf
 
 
 
