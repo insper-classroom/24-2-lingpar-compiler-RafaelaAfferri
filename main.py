@@ -29,7 +29,7 @@ class UnOp(Node):
             MOV EBX, EAX\n
             """
 
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             
             
         elif self.value == '-':
@@ -39,7 +39,7 @@ class UnOp(Node):
             IMUL EBX\n
             MOV EBX, EAX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
            
 class BinOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -52,7 +52,7 @@ class BinOp(Node):
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
 
             self.children[1].evaluate()
 
@@ -60,14 +60,14 @@ class BinOp(Node):
             POP EAX\n
             ADD EBX, EAX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             
         elif self.value == '-':
             self.children[0].evaluate()
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             
             self.children[1].evaluate()
 
@@ -76,14 +76,14 @@ class BinOp(Node):
             SUB EAX, EBX\n
             MOV EBX, EAX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
         
         elif self.value == '*':
             self.children[0].evaluate()
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             
             self.children[1].evaluate()
 
@@ -92,13 +92,13 @@ class BinOp(Node):
             IMUL EAX, EBX\n
             MOV EBX, EAX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
         elif self.value == '/':
             self.children[0].evaluate()
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             
             self.children[1].evaluate()
 
@@ -107,7 +107,7 @@ class BinOp(Node):
             DIV EBX\n
             MOV EBX, EAX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
  
 class IntVal(Node):
     def __init__(self, value, type, symbol_table):
@@ -117,7 +117,7 @@ class IntVal(Node):
         codigo = f"""
         MOV EBX, {int(self.value)}\n
         """
-        Assmebly.write(codigo)
+        Assembler.write(codigo)
 
         return (int(self.value), 'int')
     
@@ -165,7 +165,7 @@ class BinBool(Node):
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             self.children[1].evaluate()
 
             codigo = f"""
@@ -173,14 +173,14 @@ class BinBool(Node):
             CMP EAX, EBX\n
             CALL binop_jl\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             
         elif self.value == '>':
             self.children[0].evaluate()
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             self.children[1].evaluate()
 
             codigo = f"""
@@ -188,13 +188,13 @@ class BinBool(Node):
             CMP EAX, EBX\n
             CALL binop_jg\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
         elif self.value == '==':
             self.children[0].evaluate()
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             self.children[1].evaluate()
 
             codigo = f"""
@@ -202,13 +202,13 @@ class BinBool(Node):
             CMP EAX, EBX\n
             CALL binop_je\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
         elif self.value == '&&':
             self.children[0].evaluate()
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             self.children[1].evaluate()
 
             codigo = f"""
@@ -216,13 +216,13 @@ class BinBool(Node):
             AND EAX, EBX\n
             MOV EBX, EAX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
         elif self.value == '||':
             self.children[0].evaluate()
             codigo = f"""
             PUSH EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             self.children[1].evaluate()
 
             codigo = f"""
@@ -230,7 +230,7 @@ class BinBool(Node):
             OR EAX, EBX\n
             MOV EBX, EAX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
         
 class BinStr(Node):
     def __init__(self, value, type, symbol_table):
@@ -254,7 +254,7 @@ class PrintOp(Node):
             CALL print_int\n
             POP EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
 
 class ScanfOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -277,12 +277,12 @@ class IfOp(Node):
             JE IF_{self.id}_True\n
             JNE IF_{self.id}_False\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
 
             codigo = f"""
             IF_{self.id}_True:
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             self.children[1].evaluate()
 
             codigo = f"""
@@ -303,7 +303,7 @@ class WhileOp(Node):
             codigo = f"""
             WHILE_{self.id}_Start:
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
 
             self.children[0].evaluate()
 
@@ -311,14 +311,14 @@ class WhileOp(Node):
             CMP EBX, False\n
             JE WHILE_{self.id}_End\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             self.children[1].evaluate()
 
             codigo = f"""
             JMP WHILE_{self.id}_Start\n	
             WHILE_{self.id}_End:
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
 
 class AssingOP(Node):
     def __init__(self, value, type, symbol_table):
@@ -334,7 +334,7 @@ class AssingOP(Node):
             codigo = f"""
             MOV [EBP - {delta}], EBX\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             self.symbol_table.set(var, value[0], value[1], delta)
 
 class Var(Node):
@@ -347,7 +347,7 @@ class Var(Node):
             codigo = f"""
             MOV EBX, {valor}\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
             return (valor, self.symbol_table.get(self.value).type, self.symbol_table.get(self.value).delta)
 
 class type(Node):
@@ -361,7 +361,7 @@ class type(Node):
             codigo = f"""
             PUSH DWORD 0\n
             """
-            Assmebly.write(codigo)
+            Assembler.write(codigo)
 
 class indentifier():
     def __init__(self, type, value, delta):
@@ -396,7 +396,7 @@ class SymbolTable():
             raise ValueError('Tipo inválido: ' + self.table[key].type)
         self.table[key]= indentifier(type, value, delta)
     
-class Assmebly():
+class Assembly():
     def __init__(self, cabecario, rodape):
         self.cabecario = cabecario
         self.rodape = rodape
@@ -407,7 +407,7 @@ class Assmebly():
     def w_cabecario(self):
         print(self.cabecario)
 
-    def write(code):
+    def write(self, code):
         print(dedent(code))    
 
 def limpa_coment2(text):
@@ -817,27 +817,114 @@ class Parser():
 
     
 if __name__ == '__main__':
-    # code = sys.argv[1]
-    # filecode = sys.argv[1]
-    # with open(filecode, 'r') as file:
-    #    code = file.read()
-    code = """
+    code = sys.argv[1]
+    filecode = sys.argv[1]
+    with open(filecode, 'r') as file:
+       code = file.read()
+#     code = """
         
  
-  {
-    int a;
-    a = 5;
-    printf(a +3);
+#   {
+#     int a;
+#     a = 5;
+#     printf(a +3);
     
-}
-        """
+# }
+#         """
 
     parser = Parser()
 
     resultado = parser.run(code)
-    rodape = """
+    rodape = """; interrupcao de saida
+POP EBP
+MOV EAX, 1
+INT 0x80"""
+    cabecario = """
+; constantes
+SYS_EXIT equ 1
+SYS_READ equ 3
+SYS_WRITE equ 4
+STDIN equ 0
+STDOUT equ 1
+True equ 1
+False equ 0
 
+segment .data
+
+segment .bss  ; variaveis
+res RESB 1
+
+section .text
+global _start
+
+print:  ; subrotina print
+
+PUSH EBP ; guarda o base pointer
+MOV EBP, ESP ; estabelece um novo base pointer
+
+MOV EAX, [EBP+8] ; 1 argumento antes do RET e EBP
+XOR ESI, ESI
+
+print_dec: ; empilha todos os digitos
+MOV EDX, 0
+MOV EBX, 0x000A
+DIV EBX
+ADD EDX, '0'
+PUSH EDX
+INC ESI ; contador de digitos
+CMP EAX, 0
+JZ print_next ; quando acabar pula
+JMP print_dec
+
+print_next:
+CMP ESI, 0
+JZ print_exit ; quando acabar de imprimir
+DEC ESI
+
+MOV EAX, SYS_WRITE
+MOV EBX, STDOUT
+
+POP ECX
+MOV [res], ECX
+MOV ECX, res
+
+MOV EDX, 1
+INT 0x80
+JMP print_next
+
+print_exit:
+POP EBP
+RET
+
+; subrotinas if/while
+binop_je:
+JE binop_true
+JMP binop_false
+
+binop_jg:
+JG binop_true
+JMP binop_false
+
+binop_jl:
+JL binop_true
+JMP binop_false
+
+binop_false:
+MOV EBX, False
+JMP binop_exit
+binop_true:
+MOV EBX, True
+binop_exit:
+RET
+
+_start:
+
+PUSH EBP ; guarda o base pointer
+MOV EBP, ESP ; estabelece um novo base pointer
+
+; codigo gerado pelo compilador
     """
-    # Assmebly.w_cabecario()
+    Assembler = Assembly(cabecario, rodape)
+    Assembler.w_cabecario()
     resultado.evaluate()
-    # Assmebly.w_rodape()
+    Assembler.w_rodape()
