@@ -86,10 +86,159 @@ MOV EBP, ESP ; estabelece um novo base pointer
 PUSH DWORD 0
 
 
-MOV EBX, 1
+PUSH DWORD 0
+
+
+PUSH DWORD 0
+
+
+MOV EBX, 10
+
+
+MOV [EBP - 8], EBX
+
+
+MOV EBX, 2
 
 
 MOV [EBP - 4], EBX
+
+
+MOV EBX, 1
+
+
+MOV [EBP - 12], EBX
+
+
+MOV EBX, [EPB - 8]
+
+
+PUSH EBX
+
+
+MOV EBX, 5
+
+
+POP EAX
+
+CMP EAX, EBX
+
+CALL binop_je
+
+
+CMP EBX, True
+
+JE IF_19_True
+
+JNE IF_19_False
+
+
+IF_19_True:
+
+MOV EBX, 1
+
+
+PUSH EBX
+
+CALL print
+
+POP EBX
+
+
+JMP IF_19_End
+
+IF_19_False:
+
+MOV EBX, 5
+
+
+MOV [EBP - 8], EBX
+
+
+IF_19_End:
+
+WHILE_30_Start:
+
+MOV EBX, [EPB - 4]
+
+
+PUSH EBX
+
+
+MOV EBX, [EPB - 8]
+
+
+PUSH EBX
+
+
+MOV EBX, 1
+
+
+POP EAX
+
+ADD EBX, EAX
+
+
+POP EAX
+
+CMP EAX, EBX
+
+CALL binop_jl
+
+
+CMP EBX, False
+
+JE WHILE_30_End
+
+
+MOV EBX, [EPB - 12]
+
+
+PUSH EBX
+
+
+MOV EBX, [EPB - 4]
+
+
+POP EAX
+
+IMUL EAX, EBX
+
+MOV EBX, EAX
+
+
+MOV [EBP - 12], EBX
+
+
+MOV EBX, [EPB - 4]
+
+
+PUSH EBX
+
+
+MOV EBX, 1
+
+
+POP EAX
+
+ADD EBX, EAX
+
+
+MOV [EBP - 4], EBX
+
+
+JMP WHILE_30_Start
+
+WHILE_30_End:
+
+MOV EBX, [EPB - 12]
+
+
+PUSH EBX
+
+CALL print
+
+POP EBX
 
 ; interrupcao de saida
 POP EBP

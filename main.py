@@ -266,7 +266,7 @@ class PrintOp(Node):
             self.children[0].evaluate()
             codigo = f"""
             PUSH EBX\n
-            CALL print_int\n
+            CALL print\n
             POP EBX\n
             """
             Assembler.write(codigo)
@@ -306,11 +306,13 @@ class IfOp(Node):
             JMP IF_{self.id}_End\n
             IF_{self.id}_False:
             """
+            Assembler.write(codigo)
             if len(self.children) > 2:
                 self.children[2].evaluate()
             codigo = f"""
             IF_{self.id}_End:
             """
+            Assembler.write(codigo)
 
 class WhileOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -846,6 +848,8 @@ if __name__ == '__main__':
     with open(filecode, 'r') as file:
        code = file.read()
 
+
+    
     parser = Parser()
 
     resultado = parser.run(code)
