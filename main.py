@@ -421,12 +421,12 @@ class Assembly():
 
     def w_rodape(self):
         with open(self.asmfile, 'a') as file:
-            file.write(dedent(code))
+            file.write(self.rodape)
         print(self.rodape)
     
     def w_cabecario(self):
-        with open(self.asmfile, 'a') as file:
-            file.write(dedent(code))
+        with open(self.asmfile, 'w') as file:
+            file.write(self.cabecario)
         print(self.cabecario)
 
     def write(self, code):
