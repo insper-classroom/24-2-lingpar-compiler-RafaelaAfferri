@@ -838,20 +838,6 @@ if __name__ == '__main__':
     filecode = sys.argv[1]
     with open(filecode, 'r') as file:
        code = file.read()
-#     code = """
-        
- 
-#   {
-#     int a;
-#     a = 5;
-#     int b;
-#     b = 10;
-#     int c;
-#     c = a+1;
-
-    
-# }
-#         """
 
     parser = Parser()
 
