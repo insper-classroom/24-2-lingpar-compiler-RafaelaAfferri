@@ -306,7 +306,8 @@ class IfOp(Node):
             JMP IF_{self.id}_End\n
             IF_{self.id}_False:
             """
-            self.children[2].evaluate()
+            if len(self.children) > 2:
+                self.children[2].evaluate()
             codigo = f"""
             IF_{self.id}_End:
             """
