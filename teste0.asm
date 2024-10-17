@@ -110,7 +110,7 @@ MOV EBX, 1
 MOV [EBP - 12], EBX
 
 
-MOV EBX, [EPB - 8]
+MOV EBX, [EBP - 8]
 
 
 PUSH EBX
@@ -159,13 +159,13 @@ IF_19_End:
 
 WHILE_30_Start:
 
-MOV EBX, [EPB - 4]
+MOV EBX, [EBP - 4]
 
 
 PUSH EBX
 
 
-MOV EBX, [EPB - 8]
+MOV EBX, [EBP - 8]
 
 
 PUSH EBX
@@ -191,13 +191,13 @@ CMP EBX, False
 JE WHILE_30_End
 
 
-MOV EBX, [EPB - 12]
+MOV EBX, [EBP - 12]
 
 
 PUSH EBX
 
 
-MOV EBX, [EPB - 4]
+MOV EBX, [EBP - 4]
 
 
 POP EAX
@@ -210,7 +210,7 @@ MOV EBX, EAX
 MOV [EBP - 12], EBX
 
 
-MOV EBX, [EPB - 4]
+MOV EBX, [EBP - 4]
 
 
 PUSH EBX
@@ -231,7 +231,7 @@ JMP WHILE_30_Start
 
 WHILE_30_End:
 
-MOV EBX, [EPB - 12]
+MOV EBX, [EBP - 12]
 
 
 PUSH EBX
