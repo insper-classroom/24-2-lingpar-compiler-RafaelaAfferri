@@ -414,17 +414,24 @@ class SymbolTable():
         self.table[key]= indentifier(type, delta)
     
 class Assembly():
-    def __init__(self, cabecario, rodape):
+    def __init__(self, cabecario, rodape, asmfile):
         self.cabecario = cabecario
         self.rodape = rodape
+        self.asmfile = asmfile
 
     def w_rodape(self):
+        with open(self.asmfile, 'a') as file:
+            file.write(dedent(code))
         print(self.rodape)
     
     def w_cabecario(self):
+        with open(self.asmfile, 'a') as file:
+            file.write(dedent(code))
         print(self.cabecario)
 
     def write(self, code):
+        with open(self.asmfile, 'a') as file:
+            file.write(dedent(code))
         print(dedent(code))    
 
 def limpa_coment2(text):
@@ -834,8 +841,8 @@ class Parser():
 
     
 if __name__ == '__main__':
-    code = sys.argv[1]
     filecode = sys.argv[1]
+    asmfile = filecode.replace('.c', '.asm')
     with open(filecode, 'r') as file:
        code = file.read()
 
@@ -931,7 +938,7 @@ MOV EBP, ESP ; estabelece um novo base pointer
 
 ; codigo gerado pelo compilador
     """
-    Assembler = Assembly(cabecario, rodape)
+    Assembler = Assembly(cabecario, rodape, asmfile)
     Assembler.w_cabecario()
     resultado.evaluate()
     Assembler.w_rodape()
