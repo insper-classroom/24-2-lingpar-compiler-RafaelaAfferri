@@ -30,6 +30,8 @@ class UnOp(Node):
             """
 
             Assembler.write(codigo)
+
+            return 'int'
             
             
         elif self.value == '-':
@@ -41,6 +43,7 @@ class UnOp(Node):
             """
             Assembler.write(codigo)
            
+            return 'int'
 class BinOp(Node):
     def __init__(self, value, type, symbol_table):
         super().__init__(value, type, symbol_table)
@@ -61,6 +64,8 @@ class BinOp(Node):
             ADD EBX, EAX\n
             """
             Assembler.write(codigo)
+
+            return 'int'
             
         elif self.value == '-':
             self.children[0].evaluate()
@@ -77,6 +82,8 @@ class BinOp(Node):
             MOV EBX, EAX\n
             """
             Assembler.write(codigo)
+
+            return 'int'
         
         elif self.value == '*':
             self.children[0].evaluate()
@@ -93,6 +100,8 @@ class BinOp(Node):
             MOV EBX, EAX\n
             """
             Assembler.write(codigo)
+
+            return 'int'
         elif self.value == '/':
             self.children[0].evaluate()
             codigo = f"""
@@ -108,6 +117,7 @@ class BinOp(Node):
             MOV EBX, EAX\n
             """
             Assembler.write(codigo)
+            return 'int'
  
 class IntVal(Node):
     def __init__(self, value, type, symbol_table):
@@ -119,7 +129,9 @@ class IntVal(Node):
         """
         Assembler.write(codigo)
 
-        return (int(self.value), 'int')
+        return 'int'
+    
+        
     
 class strVal(Node):
     def __init__(self, value, type, symbol_table):
@@ -150,10 +162,11 @@ class UnBool(Node):
 
     def evaluate(self):
         if self.value == '!':
-                self.children[0].evaluate()
-                codigo = f"""
-                NOT EBX\n
-                """
+            self.children[0].evaluate()
+            codigo = f"""
+            NOT EBX\n
+            """
+            return 'int'
                 
 class BinBool(Node):
     def __init__(self, value, type, symbol_table):
@@ -174,6 +187,7 @@ class BinBool(Node):
             CALL binop_jl\n
             """
             Assembler.write(codigo)
+
             
         elif self.value == '>':
             self.children[0].evaluate()
@@ -232,6 +246,7 @@ class BinBool(Node):
             """
             Assembler.write(codigo)
         
+        return 'int'
 class BinStr(Node):
     def __init__(self, value, type, symbol_table):
         super().__init__(value, type, symbol_table)
@@ -255,6 +270,8 @@ class PrintOp(Node):
             POP EBX\n
             """
             Assembler.write(codigo)
+
+            
 
 class ScanfOp(Node):
     def __init__(self, value, type, symbol_table):
@@ -335,7 +352,7 @@ class AssingOP(Node):
             MOV [EBP - {delta}], EBX\n
             """
             Assembler.write(codigo)
-            self.symbol_table.set(var, value[0], value[1], delta)
+            self.symbol_table.set(var, value, delta)
 
 class Var(Node):
     def __init__(self, value, type, symbol_table):
@@ -343,12 +360,12 @@ class Var(Node):
 
     def evaluate(self):
         if self.type == 'VAR':
-            valor = self.symbol_table.get(self.value).value
+            delta = self.symbol_table.get_delta(self.value)
             codigo = f"""
-            MOV EBX, {valor}\n
+            MOV EBX, [EPB - {delta}]\n
             """
             Assembler.write(codigo)
-            return (valor, self.symbol_table.get(self.value).type, self.symbol_table.get(self.value).delta)
+            return (self.symbol_table.get(self.value).type, self.symbol_table.get(self.value).delta)
 
 class type(Node):
     def __init__(self, value, type, symbol_table):
@@ -364,9 +381,8 @@ class type(Node):
             Assembler.write(codigo)
 
 class indentifier():
-    def __init__(self, type, value, delta):
+    def __init__(self, type, delta):
         self.type = type
-        self.value = value
         self.delta = delta
 
 class SymbolTable():
@@ -376,7 +392,7 @@ class SymbolTable():
     def get (self, key):
         if key not in self.table:
             raise ValueError('Variável não declarada: ' + key)
-        if self.table[key].value == None:
+        if self.table[key].delta == None:
             raise ValueError('Variável não inicializada: ' + key)
         return self.table[key]
     def get_delta (self, key):
@@ -387,14 +403,14 @@ class SymbolTable():
         if key in self.table:
             raise ValueError('Variável já declarada: ' + key)
         delta = (len(self.table)+1) * 4
-        self.table[key]= indentifier(type, None, delta)
+        self.table[key]= indentifier(type, delta)
 
-    def set (self, key, value,type, delta):
+    def set (self, key,type, delta):
         if key not in self.table:
             raise ValueError('Variável não declarada: ' + key)
         if self.table[key].type != type:
             raise ValueError('Tipo inválido: ' + self.table[key].type)
-        self.table[key]= indentifier(type, value, delta)
+        self.table[key]= indentifier(type, delta)
     
 class Assembly():
     def __init__(self, cabecario, rodape):
@@ -817,20 +833,24 @@ class Parser():
 
     
 if __name__ == '__main__':
-    code = sys.argv[1]
-    filecode = sys.argv[1]
-    with open(filecode, 'r') as file:
-       code = file.read()
-#     code = """
+    # code = sys.argv[1]
+    # filecode = sys.argv[1]
+    # with open(filecode, 'r') as file:
+    #    code = file.read()
+    code = """
         
  
-#   {
-#     int a;
-#     a = 5;
-#     printf(a +3);
+  {
+    int a;
+    a = 5;
+    int b;
+    b = 10;
+    int c;
+    c = a+1;
+
     
-# }
-#         """
+}
+        """
 
     parser = Parser()
 
