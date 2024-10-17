@@ -365,7 +365,7 @@ class Var(Node):
         if self.type == 'VAR':
             delta = self.symbol_table.get_delta(self.value)
             codigo = f"""
-            MOV EBX, [EPB - {delta}]\n
+            MOV EBX, [EBP - {delta}]\n
             """
             Assembler.write(codigo)
             return (self.symbol_table.get(self.value).type, self.symbol_table.get(self.value).delta)
