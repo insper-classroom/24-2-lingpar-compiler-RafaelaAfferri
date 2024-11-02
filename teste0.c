@@ -1,19 +1,11 @@
-{
-int i;
-int n;
-int f;
-n = 10;
-i = 2;
-f = 1;
-if(n==5){
-printf(1);
+int main () {
+    int a;
+    int b;
+    a = 1;
+    b = 2;
+    printf(soma(a, b));
 }
-else{
-    n = 5;
+int soma(int a, int b) {
+    return a + b;
 }
-while (i < n + 1) {
-f = f * i;
-i = i + 1;
-}
-printf(f);
-}
+

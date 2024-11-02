@@ -1,441 +1,335 @@
 import sys
 
-#ROTEIRO 8 - código em assembly
+#ROTEIRO 9 - funcao e scope de variavel
 
-from textwrap import dedent
 
 
 class Node():
-    id = 0
-    def __init__(self, value, type, symbol_table):
+    def __init__(self, value, type, symbol_table_func):
         self.value = value
         self.type = type
         self.children = []
-        self.symbol_table = symbol_table
-        self.id = Node.id
-        Node.id += 1  
+        self.symbol_table_func = symbol_table_func
  
 class UnOp(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
         self.children = []
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.value == '+':
-            self.children[0].evaluate()
-            codigo = f"""
-            MOV EAX, $1\n
-            IMUL EBX\n
-            MOV EBX, EAX\n
-            """
-
-            Assembler.write(codigo)
-
-            return 'int'
-            
-            
+            filho = self.children[0].evaluate(symbol_table_local)
+            if filho[1] != 'int':
+                raise ValueError('Tipo inválido: ' + filho[1])
+            return filho
         elif self.value == '-':
-            self.children[0].evaluate()
-            codigo = f"""
-            MOV EAX, $-1\n
-            IMUL EBX\n
-            MOV EBX, EAX\n
-            """
-            Assembler.write(codigo)
-           
-            return 'int'
+            filho = self.children[0].evaluate(symbol_table_local)
+            if filho[1] != 'int':
+                raise ValueError('Tipo inválido: ' + filho[1])
+
+            return (-filho[0], filho[1])
+
 class BinOp(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
         self.children = []
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.value == '+':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            ADD EBX, EAX\n
-            """
-            Assembler.write(codigo)
-
-            return 'int'
+                num1 = self.children[0].evaluate(symbol_table_local)
+                num2 = self.children[1].evaluate(symbol_table_local)
+                if num1[1] != 'int' or num2[1] != 'int':
+                    raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+                
+                return (int(num1[0] + num2[0]), 'int')
             
         elif self.value == '-':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-            
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            SUB EAX, EBX\n
-            MOV EBX, EAX\n
-            """
-            Assembler.write(codigo)
-
-            return 'int'
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] - num2[0]), 'int')
         
         elif self.value == '*':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-            
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            IMUL EAX, EBX\n
-            MOV EBX, EAX\n
-            """
-            Assembler.write(codigo)
-
-            return 'int'
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] * num2[0]), 'int')
         elif self.value == '/':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-            
-            self.children[1].evaluate()
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] // num2[0]), 'int')
 
-            codigo = f"""
-            POP EAX\n
-            DIV EBX\n
-            MOV EBX, EAX\n
-            """
-            Assembler.write(codigo)
-            return 'int'
- 
 class IntVal(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
     
-    def evaluate(self):
-        codigo = f"""
-        MOV EBX, {int(self.value)}\n
-        """
-        Assembler.write(codigo)
-
-        return 'int'
-    
-        
+    def evaluate(self, symbol_table_local):
+        return (int(self.value), 'int')
     
 class strVal(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
     
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         return (self.value, 'str')
 
 class NoOp(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         return
     
 class Block(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.type == 'BLOCK':
+            rets = []
             for child in self.children:
-                child.evaluate()
+                if(child.type == 'RETURN'):
+                    rets.append(child.evaluate(symbol_table_local)[0])
+                else:
+                    child.evaluate(symbol_table_local)
+            return rets
 
-class UnBool(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+class  UnBool(Node):
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.value == '!':
-            self.children[0].evaluate()
-            codigo = f"""
-            NOT EBX\n
-            """
-            return 'int'
-                
+                num1 = self.children[0].evaluate(symbol_table_local)
+                if num1[1] != 'int':
+                    raise ValueError('Tipo inválido: ' + num1[1])
+                return (int(not num1[0]), 'int')
+
 class BinBool(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self): 
+    def evaluate(self, symbol_table_local): 
         if self.value == '<':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            CMP EAX, EBX\n
-            CALL binop_jl\n
-            """
-            Assembler.write(codigo)
-
-            
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] < num2[0])  , 'int')
         elif self.value == '>':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            CMP EAX, EBX\n
-            CALL binop_jg\n
-            """
-            Assembler.write(codigo)
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] > num2[0])  , 'int')
         elif self.value == '==':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            CMP EAX, EBX\n
-            CALL binop_je\n
-            """
-            Assembler.write(codigo)
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
+            if num1[1] != num2[1]:
+                raise ValueError('Tipo diferentes: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] == num2[0]), num1[1])
         elif self.value == '&&':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            AND EAX, EBX\n
-            MOV EBX, EAX\n
-            """
-            Assembler.write(codigo)
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] and num2[0])  , 'int')
         elif self.value == '||':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            """
-            Assembler.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            POP EAX\n
-            OR EAX, EBX\n
-            MOV EBX, EAX\n
-            """
-            Assembler.write(codigo)
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
+            if num1[1] != 'int' or num2[1] != 'int':
+                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] or num2[0])  , 'int')
         
-        return 'int'
 class BinStr(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.value == '.':
-            num1 = self.children[0].evaluate()
-            num2 = self.children[1].evaluate()
+            num1 = self.children[0].evaluate(symbol_table_local)
+            num2 = self.children[1].evaluate(symbol_table_local)
             return (str(num1[0]) + str(num2[0]), 'str')
         
 class PrintOp(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.type == 'PRINTF':
-            self.children[0].evaluate()
-            codigo = f"""
-            PUSH EBX\n
-            CALL print\n
-            POP EBX\n
-            """
-            Assembler.write(codigo)
-
-            
+            print(self.children[0].evaluate(symbol_table_local)[0])
 
 class ScanfOp(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.type == 'SCANF':
             num1 = input()
             return (int(num1), 'int')
 
 class IfOp(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.type == 'IF':
-            self.children[0].evaluate()
-            codigo = f"""
-            CMP EBX, True\n
-            JE IF_{self.id}_True\n
-            JNE IF_{self.id}_False\n
-            """
-            Assembler.write(codigo)
-
-            codigo = f"""
-            IF_{self.id}_True:
-            """
-            Assembler.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            JMP IF_{self.id}_End\n
-            IF_{self.id}_False:
-            """
-            Assembler.write(codigo)
-            if len(self.children) > 2:
-                self.children[2].evaluate()
-            codigo = f"""
-            IF_{self.id}_End:
-            """
-            Assembler.write(codigo)
+            if (self.children[0].evaluate(symbol_table_local)[0]>0):
+                self.children[1].evaluate(symbol_table_local)
+            elif len(self.children) == 3:
+                self.children[2].evaluate(symbol_table_local)
 
 class WhileOp(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.type == 'WHILE':
-            codigo = f"""
-            WHILE_{self.id}_Start:
-            """
-            Assembler.write(codigo)
-
-            self.children[0].evaluate()
-
-            codigo = f"""
-            CMP EBX, False\n
-            JE WHILE_{self.id}_End\n
-            """
-            Assembler.write(codigo)
-            self.children[1].evaluate()
-
-            codigo = f"""
-            JMP WHILE_{self.id}_Start\n	
-            WHILE_{self.id}_End:
-            """
-            Assembler.write(codigo)
+            while (self.children[0].evaluate(symbol_table_local)[0]>0):
+                self.children[1].evaluate(symbol_table_local)
 
 class AssingOP(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.type == 'ASSIGN':
-
             var = self.children[0].value
-            value = self.children[1].evaluate()
-            delta = self.children[0].symbol_table.get_delta(var)
-
-            codigo = f"""
-            MOV [EBP - {delta}], EBX\n
-            """
-            Assembler.write(codigo)
-            self.symbol_table.set(var, value, delta)
+            value = self.children[1].evaluate(symbol_table_local)
+            symbol_table_local.set(var, value[0], value[1])
 
 class Var(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
 
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.type == 'VAR':
-            delta = self.symbol_table.get_delta(self.value)
-            codigo = f"""
-            MOV EBX, [EBP - {delta}]\n
-            """
-            Assembler.write(codigo)
-            return (self.symbol_table.get(self.value).type, self.symbol_table.get(self.value).delta)
+            return (symbol_table_local.get(self.value).value, symbol_table_local.get(self.value).type)
 
 class type(Node):
-    def __init__(self, value, type, symbol_table):
-        super().__init__(value, type, symbol_table)
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
  
-    def evaluate(self):
+    def evaluate(self, symbol_table_local):
         if self.type == 'TYPE':
             name = self.children[0].value
-            self.symbol_table.create(name, self.value)
-            codigo = f"""
-            PUSH DWORD 0\n
-            """
-            Assembler.write(codigo)
+            symbol_table_local.create(name, self.value)
 
+class Fdec(Node):
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
+
+    def evaluate(self):
+        nome = self.value
+        tipo = self.type
+        args = self.children[0]
+        comando = self.children[1]
+        self.symbol_table_func.create(nome, tipo, args, comando)
+
+class returnNode(Node):
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
+
+    def evaluate(self, symbol_table_local):
+        return self.children[0].evaluate(symbol_table_local)
+
+class argDec(Node):
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
+
+    def evaluate(self, symbol_table_local):
+        args = []
+        for child in self.children:
+            args.append(child.evaluate(symbol_table_local))
+        return args
+
+class FCall(Node):
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
+
+    def evaluate(self, symbol_table_local):
+        if self.type == 'FCALL':
+            func = self.symbol_table_func.get(self.value)
+            args = []
+            args_value = []
+            args_type = []
+            for child in self.children:
+                args.append(child)
+            if len(args) != len(func.args.children):
+                raise ValueError('Número de argumentos inválido: ' + str(len(args)) + ' ' + str(len(func.args)))
+            for i in range(len(args)):
+                args_type.append(symbol_table_local.get(args[i].value).type)
+                if args_type[i] != func.args.children[i].value:
+                    raise ValueError('Tipo de argumento inválido: ' + symbol_table_local.get(args[i].value).type + ' ' + func.args.children[i].value)
+                args_value.append(symbol_table_local.get(args[i].value).value)
+            symbol_table_local = SymbolTable()
+            for i in range(len(args)):
+                symbol_table_local.create(func.args.children[i].children[0].value, args_type[i])
+                symbol_table_local.set(func.args.children[i].children[0].value, args_value[i], args_type[i])
+            return func.comands.evaluate(symbol_table_local)
+
+class astNode(Node):
+    def __init__(self, value, type, symbol_table_func):
+        super().__init__(value, type, symbol_table_func)
+
+    def evaluate(self):
+        symbol_table_local = SymbolTable()
+        for i in range(len(self.children)-1):
+            self.children[i].evaluate()
+        self.children[len(self.children)-1].evaluate(symbol_table_local)
 class indentifier():
-    def __init__(self, type, delta):
+    def __init__(self, type, value):
         self.type = type
-        self.delta = delta
+        self.value = value
+
+class idFuncao():
+    def __init__(self, ret, args, comands):
+        self.ret = ret
+        self.args = args
+        self.comands = comands
+
+
+class symbolTableFunc():
+    def __init__(self):
+        self.symbol_table_func = {}
+
+    def create(self, key, ret, args, comands):
+        if key in self.symbol_table_func:
+            raise ValueError('Função já declarada: ' + key)
+        self.symbol_table_func[key]= idFuncao(ret, args, comands)
+
+    def get (self, key):
+        if key not in self.symbol_table_func:
+            raise ValueError('Função não declarada: ' + key)
+        return self.symbol_table_func[key]
+        
 
 class SymbolTable():
     def __init__(self):
-        self.table = {}
+        self.symbol_table_local = {}
 
     def get (self, key):
-        if key not in self.table:
-            raise ValueError('Variável não declarada: ' + key)
-        if self.table[key].delta == None:
-            raise ValueError('Variável não inicializada: ' + key)
-        return self.table[key]
-    def get_delta (self, key):
-        if key not in self.table:
-            raise ValueError('Variável não declarada: ' + key)
-        return self.table[key].delta
+        if key not in self.symbol_table_local:
+            raise ValueError('Variável não declarada: ' + str(key))
+        if self.symbol_table_local[key].value == None:
+            raise ValueError('Variável não inicializada: ' + str(key))
+        return self.symbol_table_local[key]
     def create(self, key, type):
-        if key in self.table:
+        if key in self.symbol_table_local:
             raise ValueError('Variável já declarada: ' + key)
-        delta = (len(self.table)+1) * 4
-        self.table[key]= indentifier(type, delta)
+        self.symbol_table_local[key]= indentifier(type, None)
 
-    def set (self, key,type, delta):
-        if key not in self.table:
+    def set (self, key, value,type):
+        if key not in self.symbol_table_local:
             raise ValueError('Variável não declarada: ' + key)
-        if self.table[key].type != type:
-            raise ValueError('Tipo inválido: ' + self.table[key].type)
-        self.table[key]= indentifier(type, delta)
+        if self.symbol_table_local[key].type != type:
+            raise ValueError('Tipo inválido: ' + self.symbol_table_local[key].type)
+        self.symbol_table_local[key]= indentifier(type, value)
     
-class Assembly():
-    def __init__(self, cabecario, rodape, asmfile):
-        self.cabecario = cabecario
-        self.rodape = rodape
-        self.asmfile = asmfile
-
-    def w_rodape(self):
-        with open(self.asmfile, 'a') as file:
-            file.write(self.rodape)
-        print(self.rodape)
-    
-    def w_cabecario(self):
-        with open(self.asmfile, 'w') as file:
-            file.write(self.cabecario)
-        print(self.cabecario)
-
-    def write(self, code):
-        with open(self.asmfile, 'a') as file:
-            file.write(dedent(code))
-        print(dedent(code))    
-
 def limpa_coment2(text):
     i=0
     while i < (len(text)-1):
@@ -542,6 +436,11 @@ class Tokenizer():
                 self.next = Token('OR', '||')
                 return self.next
             raise ValueError('Caracter inválido: ' + self.source[self.position])
+        elif self.source[self.position] == ',':
+            self.position += 1
+            self.next = Token('COMMA', ',')
+            return self.next
+        
     
         elif self.source[self.position] == '"':
             self.position += 1
@@ -573,6 +472,8 @@ class Tokenizer():
                 self.next = Token('TYPE', self.source[start:self.position])
             elif (self.source[start:self.position] == 'str'):
                 self.next = Token('TYPE', self.source[start:self.position])
+            elif (self.source[start:self.position] == 'return'):
+                self.next = Token('RETURN', self.source[start:self.position])
             else:
                 self.next = Token('VAR', self.source[start:self.position])
             return self.next
@@ -595,12 +496,68 @@ class Parser():
         self.tokenizer = None
         self.resultado = 0
 
+    def BlockAst(self):
+        token = self.tokenizer.next
+        no = astNode("AST", "AST", self.symbol_table_func)
+        while(token.tipo != 'EOF'):
+            no.children.append(self.funcDefBlock())
+            self.tokenizer.selectNext()
+            token = self.tokenizer.next
+        node = FCall("main", "FCALL", self.symbol_table_func)
+        no.children.append(node)
+
+        return no
+        
+
+    def funcDefBlock(self):
+
+        token = self.tokenizer.next
+        if token.tipo == "TYPE":
+            tipo = token.valor
+            self.tokenizer.selectNext()
+            token = self.tokenizer.next
+            if token.tipo != "VAR":
+                raise ValueError('Token inválido: ' + token.tipo)
+            func = Fdec(token.valor, tipo, self.symbol_table_func)
+            self.tokenizer.selectNext()
+            token = self.tokenizer.next
+            if token.tipo != "LPAREN":
+                raise ValueError('Token inválido: ' + token.tipo)
+            self.tokenizer.selectNext()
+            token = self.tokenizer.next
+            arg = argDec(func.value, tipo , self.symbol_table_func)
+            while token.tipo != "RPAREN":
+                if token.tipo == 'EOF':
+                    raise ValueError('Token inválido: ' + token.tipo)
+                
+                if token.tipo != 'TYPE':
+                    raise ValueError('Token inválido: ' + token.tipo)
+                no = type(token.valor, token.tipo, self.symbol_table_func)
+
+                self.tokenizer.selectNext()
+                token = self.tokenizer.next
+                if token.tipo != 'VAR':
+                    raise ValueError('Token inválido: ' + token.tipo)
+                no.children.append(Var(token.valor, token.tipo, self.symbol_table_func))
+                arg.children.append(no)
+
+                self.tokenizer.selectNext()
+                token = self.tokenizer.next
+                if token.tipo == 'COMMA':
+                    self.tokenizer.selectNext()
+                    token = self.tokenizer.next
+            func.children.append(arg)
+            self.tokenizer.selectNext()      
+            func.children.append(self.parserCommand())
+            return func
+
+   
     def parserBlock(self):
         token = self.tokenizer.next
         self.tokenizer.selectNext()
         if token.tipo == 'LBRACE':
             token = self.tokenizer.next
-            node = Block("{", "BLOCK", self.table)
+            node = Block("{", "BLOCK", self.symbol_table_func)
             while token.tipo != 'RBRACE':
                 if token.tipo == 'EOF':
                     raise ValueError('Token inválido: ' + token.tipo)
@@ -608,7 +565,6 @@ class Parser():
                 if res != None:
                     node.children.append(res)
                 token = self.tokenizer.next
-            self.tokenizer.selectNext()
             return node
 
   
@@ -622,8 +578,8 @@ class Parser():
             if token.tipo != 'ASSIGN':
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
-            no = AssingOP(token.valor, token.tipo, self.table)
-            no.children.append(Var(var, token.tipo, self.table))
+            no = AssingOP(token.valor, token.tipo, self.symbol_table_func)
+            no.children.append(Var(var, token.tipo, self.symbol_table_func))
             no.children.append(self.orExpr())
             token = self.tokenizer.next
             if token.tipo != 'SEMICOLON':
@@ -632,11 +588,11 @@ class Parser():
             return no
         if token.tipo == 'TYPE':
             self.tokenizer.selectNext()
-            no = type(token.valor, token.tipo, self.table)
+            no = type(token.valor, token.tipo, self.symbol_table_func)
             token = self.tokenizer.next
             if token.tipo != 'VAR':
                 raise ValueError('Token inválido: ' + token.tipo)
-            no.children.append(Var(token.valor, token.tipo, self.table))
+            no.children.append(Var(token.valor, token.tipo, self.symbol_table_func))
             self.tokenizer.selectNext()
             token = self.tokenizer.next
             if token.tipo != 'SEMICOLON':
@@ -646,7 +602,7 @@ class Parser():
             return self.parserBlock()
         elif token.tipo == 'SEMICOLON':
             self.tokenizer.selectNext()
-            return NoOp(";", "SEMICOLON", self.table)
+            return NoOp(";", "SEMICOLON", self.symbol_table_func)
         elif token.tipo == 'PRINTF':
             self.tokenizer.selectNext()
             token = self.tokenizer.next
@@ -654,7 +610,7 @@ class Parser():
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
             token = self.tokenizer.next
-            no = PrintOp("printf","PRINTF", self.table)    
+            no = PrintOp("printf","PRINTF", self.symbol_table_func)    
             no.children.append(self.orExpr())            
             token = self.tokenizer.next
             if token.tipo != 'RPAREN':
@@ -672,7 +628,7 @@ class Parser():
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
             token = self.tokenizer.next
-            no = IfOp("if","IF", self.table)
+            no = IfOp("if","IF", self.symbol_table_func)
             no.children.append(self.orExpr())
             token = self.tokenizer.next
             if token.tipo != 'RPAREN':
@@ -692,7 +648,7 @@ class Parser():
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
             token = self.tokenizer.next
-            no = WhileOp("while","WHILE", self.table)
+            no = WhileOp("while","WHILE", self.symbol_table_func)
             no.children.append(self.orExpr())
             token = self.tokenizer.next
             if token.tipo != 'RPAREN':
@@ -701,6 +657,15 @@ class Parser():
             no.children.append(self.parserCommand())
             token = self.tokenizer.next
             return no         
+        elif token.tipo == 'RETURN':
+            self.tokenizer.selectNext()
+            no = returnNode("return","RETURN", self.symbol_table_func)
+            no.children.append(self.orExpr())
+            token = self.tokenizer.next
+            if token.tipo != 'SEMICOLON':
+                raise ValueError('Token inválido: ' + token.tipo)
+            self.tokenizer.selectNext()
+            return no
 
         else:
             raise ValueError('Token inválido: ' + token.tipo)
@@ -711,17 +676,31 @@ class Parser():
         token = self.tokenizer.next
         self.tokenizer.selectNext()
         if token.tipo == 'INT':
-            return IntVal(token.valor, token.tipo, self.table)
+            return IntVal(token.valor, token.tipo, self.symbol_table_func)
         elif token.tipo == 'MINUS' or token.tipo == 'PLUS':
-            no = UnOp(token.valor, token.tipo, self.table)
+            no = UnOp(token.valor, token.tipo, self.symbol_table_func)
             no.children.append(self.parseFactor())
             return no
         elif token.tipo == 'NOT':
-            no = UnBool(token.valor, token.tipo, self.table)
+            no = UnBool(token.valor, token.tipo, self.symbol_table_func)
             no.children.append(self.parseFactor())
             return no
         elif token.tipo == 'VAR':
-            return Var(token.valor, token.tipo, self.table)
+            no = Var(token.valor, token.tipo, self.symbol_table_func)
+            no2 = FCall(token.valor, 'FCALL', self.symbol_table_func)
+            token = self.tokenizer.next
+            if token.tipo == 'LPAREN':
+                self.tokenizer.selectNext()
+                token = self.tokenizer.next
+                while token.tipo != 'RPAREN':
+                    no2.children.append(self.orExpr())
+                    token = self.tokenizer.next
+                    if token.tipo == 'COMMA':
+                        self.tokenizer.selectNext()
+                        token = self.tokenizer.next
+                self.tokenizer.selectNext()
+                return no2
+            return no
         elif token.tipo == 'SCANF':
             token = self.tokenizer.next
             if token.tipo != 'LPAREN':
@@ -731,9 +710,9 @@ class Parser():
             if token.tipo != 'RPAREN':
                 raise ValueError('Token inválido: ' + token.tipo)
             self.tokenizer.selectNext()
-            return ScanfOp("scanf", "SCANF", self.table)
+            return ScanfOp("scanf", "SCANF", self.symbol_table_func)
         elif token.tipo == 'STR':
-            return strVal(token.valor, token.tipo, self.table)
+            return strVal(token.valor, token.tipo, self.symbol_table_func)
         elif token.tipo == 'LPAREN':
             resultado = self.orExpr()
             token = self.tokenizer.next
@@ -749,7 +728,7 @@ class Parser():
         token = self.tokenizer.next
         while token.tipo == 'MULT' or token.tipo == 'DIV':
             self.tokenizer.selectNext()
-            op = BinOp(token.valor, token.tipo, self.table)
+            op = BinOp(token.valor, token.tipo, self.symbol_table_func)
             op.children.append(node)
             node = op
             node.children.append(self.parseFactor())
@@ -761,7 +740,7 @@ class Parser():
         token = self.tokenizer.next
         while token.tipo == 'CONCAT':
             self.tokenizer.selectNext()
-            op = BinStr(token.valor, token.tipo, self.table)
+            op = BinStr(token.valor, token.tipo, self.symbol_table_func)
             op.children.append(node)
             node = op
             node.children.append(self.parseTerm())
@@ -773,7 +752,7 @@ class Parser():
         token = self.tokenizer.next
         while token.tipo == 'PLUS' or token.tipo == 'MINUS':
             self.tokenizer.selectNext()
-            op = BinOp(token.valor, token.tipo, self.table)
+            op = BinOp(token.valor, token.tipo, self.symbol_table_func)
             op.children.append(node)
             node = op
             node.children.append(self.parseTerm())
@@ -785,7 +764,7 @@ class Parser():
         token = self.tokenizer.next
         while token.tipo == 'LESS' or token.tipo == 'GREATER':
             self.tokenizer.selectNext()
-            op = BinBool(token.valor, token.tipo, self.table)
+            op = BinBool(token.valor, token.tipo, self.symbol_table_func)
             op.children.append(node)
             node = op
             node.children.append(self.parseExpression())
@@ -797,7 +776,7 @@ class Parser():
         token = self.tokenizer.next
         while token.tipo == 'EQUAL':
             self.tokenizer.selectNext()
-            op = BinBool(token.valor, token.tipo, self.table)
+            op = BinBool(token.valor, token.tipo, self.symbol_table_func)
             op.children.append(node)
             node = op
             node.children.append(self.relExpr())
@@ -809,7 +788,7 @@ class Parser():
         token = self.tokenizer.next
         while token.tipo == 'AND':
             self.tokenizer.selectNext()
-            op = BinBool(token.valor, token.tipo, self.table)
+            op = BinBool(token.valor, token.tipo, self.symbol_table_func)
             op.children.append(node)
             node = op
             node.children.append(self.eqExpr())
@@ -821,7 +800,7 @@ class Parser():
         token = self.tokenizer.next
         while token.tipo == 'OR':
             self.tokenizer.selectNext()
-            op = BinBool(token.valor, token.tipo, self.table)
+            op = BinBool(token.valor, token.tipo, self.symbol_table_func)
             op.children.append(node)
             node = op
             node.children.append(self.andExpr())
@@ -833,9 +812,10 @@ class Parser():
     def run(self, code):
         tokenizador = Tokenizer(code)
         self.tokenizer = tokenizador
-        self.table = SymbolTable()
+        self.symbol_table_func = symbolTableFunc()
         self.tokenizer.selectNext()
-        node = self.parserBlock()
+
+        node = self.BlockAst()
         token = self.tokenizer.next
         if token.tipo != 'EOF':
             raise ValueError('Token inválido: ' + self.tokenizer.next.tipo)
@@ -843,106 +823,30 @@ class Parser():
 
     
 if __name__ == '__main__':
+    code = sys.argv[1]
     filecode = sys.argv[1]
-    asmfile = filecode.replace('.c', '.asm')
     with open(filecode, 'r') as file:
        code = file.read()
 
+    # code = """
+    # int soma(int x, int y){
+    # int c;
+    # c = x + y;
+    # return c;
+    # }
 
-    
+    # int main () {
+    # int a;
+    # int b;
+    # a = 10;
+    # b = 20;
+    # printf(a+b);
+    # }
+
+
+# """
+
     parser = Parser()
 
     resultado = parser.run(code)
-    rodape = """; interrupcao de saida
-POP EBP
-MOV EAX, 1
-INT 0x80"""
-    cabecario = """
-; constantes
-SYS_EXIT equ 1
-SYS_READ equ 3
-SYS_WRITE equ 4
-STDIN equ 0
-STDOUT equ 1
-True equ 1
-False equ 0
-
-segment .data
-
-segment .bss  ; variaveis
-res RESB 1
-
-section .text
-global _start
-
-print:  ; subrotina print
-
-PUSH EBP ; guarda o base pointer
-MOV EBP, ESP ; estabelece um novo base pointer
-
-MOV EAX, [EBP+8] ; 1 argumento antes do RET e EBP
-XOR ESI, ESI
-
-print_dec: ; empilha todos os digitos
-MOV EDX, 0
-MOV EBX, 0x000A
-DIV EBX
-ADD EDX, '0'
-PUSH EDX
-INC ESI ; contador de digitos
-CMP EAX, 0
-JZ print_next ; quando acabar pula
-JMP print_dec
-
-print_next:
-CMP ESI, 0
-JZ print_exit ; quando acabar de imprimir
-DEC ESI
-
-MOV EAX, SYS_WRITE
-MOV EBX, STDOUT
-
-POP ECX
-MOV [res], ECX
-MOV ECX, res
-
-MOV EDX, 1
-INT 0x80
-JMP print_next
-
-print_exit:
-POP EBP
-RET
-
-; subrotinas if/while
-binop_je:
-JE binop_true
-JMP binop_false
-
-binop_jg:
-JG binop_true
-JMP binop_false
-
-binop_jl:
-JL binop_true
-JMP binop_false
-
-binop_false:
-MOV EBX, False
-JMP binop_exit
-binop_true:
-MOV EBX, True
-binop_exit:
-RET
-
-_start:
-
-PUSH EBP ; guarda o base pointer
-MOV EBP, ESP ; estabelece um novo base pointer
-
-; codigo gerado pelo compilador
-    """
-    Assembler = Assembly(cabecario, rodape, asmfile)
-    Assembler.w_cabecario()
     resultado.evaluate()
-    Assembler.w_rodape()
