@@ -90,13 +90,11 @@ class Block(Node):
 
     def evaluate(self, symbol_table_local):
         if self.type == 'BLOCK':
-            rets = []
             for child in self.children:
                 if(child.type == 'RETURN'):
-                    rets.append(child.evaluate(symbol_table_local)[0])
+                    return child.evaluate(symbol_table_local)
                 else:
                     child.evaluate(symbol_table_local)
-            return rets
 
 class  UnBool(Node):
     def __init__(self, value, type, symbol_table_func):
@@ -216,8 +214,9 @@ class type(Node):
  
     def evaluate(self, symbol_table_local):
         if self.type == 'TYPE':
-            name = self.children[0].value
-            symbol_table_local.create(name, self.value)
+            for child in self.children:
+                name = child.value
+                symbol_table_local.create(name, self.value)
 
 class Fdec(Node):
     def __init__(self, value, type, symbol_table_func):
@@ -262,14 +261,19 @@ class FCall(Node):
             if len(args) != len(func.args.children):
                 raise ValueError('Número de argumentos inválido: ' + str(len(args)) + ' ' + str(len(func.args)))
             for i in range(len(args)):
-                args_type.append(symbol_table_local.get(args[i].value).type)
-                if args_type[i] != func.args.children[i].value:
-                    raise ValueError('Tipo de argumento inválido: ' + symbol_table_local.get(args[i].value).type + ' ' + func.args.children[i].value)
-                args_value.append(symbol_table_local.get(args[i].value).value)
+                if args[i].type == 'VAR':
+                    args_type.append(symbol_table_local.get(args[i].value).type)
+                    if args_type[i] != func.args.children[i].value:
+                        raise ValueError('Tipo de argumento inválido: ' + symbol_table_local.get(args[i].value).type + ' ' + func.args.children[i].value)
+                    args_value.append(symbol_table_local.get(args[i].value).value)
+                else:
+                    args_type.append(args[i].evaluate(symbol_table_local)[1])
+                    args_value.append(args[i].evaluate(symbol_table_local)[0])
             symbol_table_local = SymbolTable()
             for i in range(len(args)):
                 symbol_table_local.create(func.args.children[i].children[0].value, args_type[i])
                 symbol_table_local.set(func.args.children[i].children[0].value, args_value[i], args_type[i])
+                
             return func.comands.evaluate(symbol_table_local)
 
 class astNode(Node):
@@ -472,6 +476,8 @@ class Tokenizer():
                 self.next = Token('TYPE', self.source[start:self.position])
             elif (self.source[start:self.position] == 'str'):
                 self.next = Token('TYPE', self.source[start:self.position])
+            elif (self.source[start:self.position] == 'void'):
+                self.next = Token('TYPE', self.source[start:self.position])
             elif (self.source[start:self.position] == 'return'):
                 self.next = Token('RETURN', self.source[start:self.position])
             else:
@@ -565,6 +571,7 @@ class Parser():
                 if res != None:
                     node.children.append(res)
                 token = self.tokenizer.next
+            self.tokenizer.selectNext()
             return node
 
   
@@ -575,17 +582,35 @@ class Parser():
             self.tokenizer.selectNext()
             var = token.valor
             token = self.tokenizer.next
-            if token.tipo != 'ASSIGN':
+            if token.tipo == 'ASSIGN':
+                
+                self.tokenizer.selectNext()
+                no = AssingOP(token.valor, token.tipo, self.symbol_table_func)
+                no.children.append(Var(var, token.tipo, self.symbol_table_func))
+                no.children.append(self.orExpr())
+                token = self.tokenizer.next
+                if token.tipo != 'SEMICOLON':
+                    raise ValueError('Token inválido: ' + token.tipo)
+                self.tokenizer.selectNext()
+                return no
+            elif token.tipo == 'LPAREN':
+                self.tokenizer.selectNext()
+                no = FCall(var, 'FCALL', self.symbol_table_func)
+                token = self.tokenizer.next
+                while token.tipo != 'RPAREN':
+                    no.children.append(self.orExpr())
+                    token = self.tokenizer.next
+                    if token.tipo == 'COMMA':
+                        self.tokenizer.selectNext()
+                        token = self.tokenizer.next
+                self.tokenizer.selectNext()
+                token = self.tokenizer.next
+                if token.tipo != 'SEMICOLON':
+                    raise ValueError('Token inválido: ' + token.tipo)
+                self.tokenizer.selectNext()
+                return no
+            else:
                 raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
-            no = AssingOP(token.valor, token.tipo, self.symbol_table_func)
-            no.children.append(Var(var, token.tipo, self.symbol_table_func))
-            no.children.append(self.orExpr())
-            token = self.tokenizer.next
-            if token.tipo != 'SEMICOLON':
-                raise ValueError('Token inválido: ' + token.tipo)
-            self.tokenizer.selectNext()
-            return no
         if token.tipo == 'TYPE':
             self.tokenizer.selectNext()
             no = type(token.valor, token.tipo, self.symbol_table_func)
@@ -595,6 +620,14 @@ class Parser():
             no.children.append(Var(token.valor, token.tipo, self.symbol_table_func))
             self.tokenizer.selectNext()
             token = self.tokenizer.next
+            while token.tipo == 'COMMA':
+                self.tokenizer.selectNext()
+                token = self.tokenizer.next
+                if token.tipo != 'VAR':
+                    raise ValueError('Token inválido: ' + token.tipo)
+                no.children.append(Var(token.valor, token.tipo, self.symbol_table_func))
+                self.tokenizer.selectNext()
+                token = self.tokenizer.next
             if token.tipo != 'SEMICOLON':
                 raise ValueError('Token inválido: ' + token.tipo)
             return no
@@ -637,9 +670,11 @@ class Parser():
             token = self.tokenizer.next
             no.children.append(self.parserCommand())
             token = self.tokenizer.next
+            
             if token.tipo == 'ELSE':
                 self.tokenizer.selectNext()
                 no.children.append(self.parserCommand())
+                
             return no
         elif token.tipo == 'WHILE':
             self.tokenizer.selectNext()
@@ -828,22 +863,7 @@ if __name__ == '__main__':
     with open(filecode, 'r') as file:
        code = file.read()
 
-    # code = """
-    # int soma(int x, int y){
-    # int c;
-    # c = x + y;
-    # return c;
-    # }
-
-    # int main () {
-    # int a;
-    # int b;
-    # a = 10;
-    # b = 20;
-    # printf(a+b);
-    # }
-
-
+#     code = """
 # """
 
     parser = Parser()
