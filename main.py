@@ -507,7 +507,6 @@ class Parser():
         no = astNode("AST", "AST", self.symbol_table_func)
         while(token.tipo != 'EOF'):
             no.children.append(self.funcDefBlock())
-            self.tokenizer.selectNext()
             token = self.tokenizer.next
         node = FCall("main", "FCALL", self.symbol_table_func)
         no.children.append(node)
@@ -556,6 +555,8 @@ class Parser():
             self.tokenizer.selectNext()      
             func.children.append(self.parserCommand())
             return func
+        else:
+            raise ValueError('Token inválido: ' + token.tipo)
 
    
     def parserBlock(self):
@@ -862,9 +863,6 @@ if __name__ == '__main__':
     filecode = sys.argv[1]
     with open(filecode, 'r') as file:
        code = file.read()
-
-#     code = """
-# """
 
     parser = Parser()
 
