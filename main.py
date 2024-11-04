@@ -221,7 +221,7 @@ class type(Node):
         if self.type == 'TYPE':
             for child in self.children:
                 name = child.value
-                symbol_table_local.create(name, self.value)
+                symbol_table_local.create(name, self.value, 'local')
 
 class Fdec(Node):
     def __init__(self, value, type, symbol_table_func):
@@ -276,7 +276,7 @@ class FCall(Node):
                     args_value.append(args[i].evaluate(symbol_table_local)[0])
             symbol_table_local = SymbolTable()
             for i in range(len(args)):
-                symbol_table_local.create(func.args.children[i].children[0].value, args_type[i])
+                symbol_table_local.create(func.args.children[i].children[0].value, args_type[i], 'arg')
                 symbol_table_local.set(func.args.children[i].children[0].value, args_value[i], args_type[i])
                 
             return func.comands.evaluate(symbol_table_local)
@@ -291,9 +291,10 @@ class astNode(Node):
             self.children[i].evaluate()
         self.children[len(self.children)-1].evaluate(symbol_table_local)
 class indentifier():
-    def __init__(self, type, value):
+    def __init__(self, type, value, scope):
         self.type = type
         self.value = value
+        self.scope = scope
 
 class idFuncao():
     def __init__(self, ret, args, comands):
@@ -327,17 +328,23 @@ class SymbolTable():
         if self.symbol_table_local[key].value == None:
             raise ValueError('Variável não inicializada: ' + str(key))
         return self.symbol_table_local[key]
-    def create(self, key, type):
+    def create(self, key, type, scope):
         if key in self.symbol_table_local:
-            raise ValueError('Variável já declarada: ' + key)
-        self.symbol_table_local[key]= indentifier(type, None)
+            if self.symbol_table_local[key].scope == 'arg':
+                valor = self.symbol_table_local[key].value
+                self.symbol_table_local[key]= indentifier(type, valor, scope)
+            else:
+                raise ValueError('Variável já declarada: ' + key)
+        else:
+            self.symbol_table_local[key]= indentifier(type, None, scope)
 
     def set (self, key, value,type):
         if key not in self.symbol_table_local:
             raise ValueError('Variável não declarada: ' + key)
         if self.symbol_table_local[key].type != type:
             raise ValueError('Tipo inválido: ' + self.symbol_table_local[key].type)
-        self.symbol_table_local[key]= indentifier(type, value)
+        scope = self.symbol_table_local[key].scope
+        self.symbol_table_local[key]= indentifier(type, value, scope)
     
 def limpa_coment2(text):
     i=0
@@ -869,17 +876,10 @@ if __name__ == '__main__':
     with open(filecode, 'r') as file:
        code = file.read()
 
-#     code = """
+    # code = """
 
 
-# void main() {
-#     str a, b;
-#     a = "abc";
-#     b = "def";
-#     printf(a>b);
-# }
-
-#     """
+    # """
 
     parser = Parser()
 
