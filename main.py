@@ -91,10 +91,9 @@ class Block(Node):
     def evaluate(self, symbol_table_local):
         if self.type == 'BLOCK':
             for child in self.children:
-                if(child.type == 'RETURN'):
-                    return child.evaluate(symbol_table_local)
-                else:
-                    child.evaluate(symbol_table_local)
+                retorno = child.evaluate(symbol_table_local)
+                if retorno != None:
+                    return retorno
 
 class  UnBool(Node):
     def __init__(self, value, type, symbol_table_func):
@@ -115,15 +114,16 @@ class BinBool(Node):
         if self.value == '<':
             num1 = self.children[0].evaluate(symbol_table_local)
             num2 = self.children[1].evaluate(symbol_table_local)
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] < num2[0])  , 'int')
+            
+            if num1[1] != num2[1]:
+                raise ValueError('Tipo diferentes: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] < num2[0]), num1[1])
         elif self.value == '>':
             num1 = self.children[0].evaluate(symbol_table_local)
             num2 = self.children[1].evaluate(symbol_table_local)
-            if num1[1] != 'int' or num2[1] != 'int':
-                raise ValueError('Tipo inválido: ' + num1[1] + ' ' + num2[1])
-            return (int(num1[0] > num2[0])  , 'int')
+            if num1[1] != num2[1]:
+                raise ValueError('Tipo diferentes: ' + num1[1] + ' ' + num2[1])
+            return (int(num1[0] > num2[0]), num1[1])
         elif self.value == '==':
             num1 = self.children[0].evaluate(symbol_table_local)
             num2 = self.children[1].evaluate(symbol_table_local)
@@ -176,10 +176,12 @@ class IfOp(Node):
 
     def evaluate(self, symbol_table_local):
         if self.type == 'IF':
-            if (self.children[0].evaluate(symbol_table_local)[0]>0):
-                self.children[1].evaluate(symbol_table_local)
+            if self.children[0].evaluate(symbol_table_local)[0] > 0:
+                return self.children[1].evaluate(symbol_table_local)
             elif len(self.children) == 3:
-                self.children[2].evaluate(symbol_table_local)
+                return self.children[2].evaluate(symbol_table_local)
+            return None
+            
 
 class WhileOp(Node):
     def __init__(self, value, type, symbol_table_func):
@@ -187,8 +189,11 @@ class WhileOp(Node):
 
     def evaluate(self, symbol_table_local):
         if self.type == 'WHILE':
-            while (self.children[0].evaluate(symbol_table_local)[0]>0):
-                self.children[1].evaluate(symbol_table_local)
+            while self.children[0].evaluate(symbol_table_local)[0] > 0:
+                result = self.children[1].evaluate(symbol_table_local)
+                if result is not None:
+                    return result
+            return None
 
 class AssingOP(Node):
     def __init__(self, value, type, symbol_table_func):
@@ -863,6 +868,18 @@ if __name__ == '__main__':
     filecode = sys.argv[1]
     with open(filecode, 'r') as file:
        code = file.read()
+
+#     code = """
+
+
+# void main() {
+#     str a, b;
+#     a = "abc";
+#     b = "def";
+#     printf(a>b);
+# }
+
+#     """
 
     parser = Parser()
 
