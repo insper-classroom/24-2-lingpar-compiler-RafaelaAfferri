@@ -182,6 +182,7 @@ class IfOp(Node):
                 return self.children[2].evaluate(symbol_table_local)
             return None
             
+
 class WhileOp(Node):
     def __init__(self, value, type, symbol_table_func):
         super().__init__(value, type, symbol_table_func)
